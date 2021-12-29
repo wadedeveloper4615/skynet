@@ -1,4 +1,4 @@
-# skynet v1.0
+# skynet v0.01
 
 ## Skynet is a c/asm based operating system. The primary goal is windows compatibiliy. The first versions will be strictly 32-bit command line with no GUI. All build processes will run in a Ubuntu linux 20.04 running under Windows Subsystem for linux 2 (WSL v2.0)
 ---
