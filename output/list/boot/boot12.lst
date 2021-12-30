@@ -1,0 +1,429 @@
+     1                                  ;  boot12.asm
+     2                                  ;
+     3                                  ;  This program is a FAT12 bootloader
+     4                                  ;  Copyright (c) 2017-2020, Joshua Riek
+     5                                  ;
+     6                                  ;  This program is free software: you can redistribute it and/or modify
+     7                                  ;  it under the terms of the GNU General Public License as published by
+     8                                  ;  the Free Software Foundation, either version 3 of the License, or
+     9                                  ;  (at your option) any later version.
+    10                                  ;
+    11                                  ;  This program is distributed in the hope that it will be useful,
+    12                                  ;  but WITHOUT ANY WARRANTY; without even the implied warranty of
+    13                                  ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    14                                  ;  GNU General Public License for more details.
+    15                                  ;
+    16                                  ;  You should have received a copy of the GNU General Public License
+    17                                  ;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    18                                  ;
+    19                                  
+    20                                      %define BOOT_ADDR   0x007c00                ; Physical boot address
+    21                                  
+    22                                      %define BOOT_SEG    (BOOT_ADDR >> 4)        ; (BOOT_SEG  << 4)  + BOOT_OFF   = BOOT_ADDR
+    23                                      %define BOOT_OFF    (BOOT_ADDR & 0xf)
+    24                                  
+    25                                      %define STACK_ADDR  0x007000                ; Physical stack address
+    26                                  
+    27                                      %define STACK_SEG   (STACK_ADDR >> 4)       ; (STACK_SEG  << 4) + STACK_OFF  = STACK_ADDR
+    28                                      %define STACK_OFF   (STACK_ADDR & 0xf)
+    29                                  
+    30                                      %define BUFFER_ADDR 0x010000                ; Physical buffer address
+    31                                  
+    32                                      %define BUFFER_SEG  (BUFFER_ADDR >> 4)      ; (BUFFER_SEG << 4) + BUFFER_OFF = BUFFER_ADDR
+    33                                      %define BUFFER_OFF  (BUFFER_ADDR & 0xf)
+    34                                  
+    35                                      %define LOAD_ADDR   0x001000                ; Physical load address (where the program loads)
+    36                                  
+    37                                      %define LOAD_SEG    (LOAD_ADDR >> 4)        ; (LOAD_SEG   << 4) + LOAD_OFF   = LOAD_ADDR
+    38                                      %define LOAD_OFF    (LOAD_ADDR & 0xf)
+    39                                  
+    40                                      %ifidn __OUTPUT_FORMAT__, elf               ; WARNING: Assumes that the text segment is set to
+    41                                        %define BOOT_SEG 0x0000                   ; 0x7c00, used ONLY for debugging with GDB
+    42                                        %define BOOT_OFF 0x0000
+    43                                      %endif
+    44                                      
+    45                                      bits 16                                     ; Ensure 16-bit code
+    46                                      cpu  8086                                   ; Assemble with the 8086 instruction set
+    47                                  
+    48                                  ;---------------------------------------------------
+    49                                  ; Disk description table
+    50                                  ;---------------------------------------------------
+    51                                  
+    52 00000000 EB3C                        jmp short entryPoint                        ; Jump over OEM / BIOS param block
+    53 00000002 90                          nop
+    54                                  
+    55                                      %define OEMName           bp+0x03           ; Disk label
+    56                                      %define bytesPerSector    bp+0x0b           ; Bytes per sector
+    57                                      %define sectorsPerCluster bp+0x0d           ; Sectors per cluster
+    58                                      %define reservedSectors   bp+0x0e           ; Reserved sectors
+    59                                      %define fats              bp+0x10           ; Number of fats
+    60                                      %define rootDirEntries    bp+0x11           ; Number of entries in root dir
+    61                                      %define sectors           bp+0x13           ; Logical sectors
+    62                                      %define mediaType         bp+0x15           ; Media descriptor byte
+    63                                      %define fatSectors        bp+0x16           ; Sectors per FAT
+    64                                      %define sectorsPerTrack   bp+0x18           ; Sectors per track
+    65                                      %define heads             bp+0x1a           ; Number of sides/heads
+    66                                      %define hiddenSectors     bp+0x1c           ; Hidden sectors
+    67                                      %define hugeSectors       bp+0x20           ; LBA sectors
+    68                                      %define biosDriveNum      bp+0x24           ; Drive number
+    69                                      %define reserved          bp+0x25           ; This is not used
+    70                                      %define bootSignature     bp+0x26           ; Drive signature
+    71                                      %define volumeId          bp+0x27           ; Volume ID
+    72                                      %define volumeLabel       bp+0x2b           ; Volume Label
+    73                                      %define fatTypeLabel      bp+0x36           ; File system type
+    74                                      
+    75 00000003 00<rep 3Bh>                 times 0x3b db 0x00
+    76                                  
+    77                                  ;---------------------------------------------------
+    78                                  ; Start of the main bootloader code and entry point
+    79                                  ;---------------------------------------------------
+    80                                  global entryPoint    
+    81                                  entryPoint:
+    82 0000003E EA[4300]C007                jmp BOOT_SEG:$+5                            ; Fix the cs:ip registers
+    83                                      
+    84                                  bootStrap:
+    85 00000043 B8C007                      mov ax, BOOT_SEG                            ; Set segments to the location of the bootloader
+    86 00000046 8ED8                        mov ds, ax
+    87 00000048 8EC0                        mov es, ax
+    88                                      
+    89 0000004A FA                          cli
+    90 0000004B B80007                      mov ax, STACK_SEG                           ; Get the the defined stack segment address
+    91 0000004E 8ED0                        mov ss, ax                                  ; Set segment register to the bottom  of the stack
+    92 00000050 BC0000                      mov sp, STACK_OFF                           ; Set ss:sp to the top of the 4k stack
+    93 00000053 FB                          sti
+    94                                      
+    95 00000054 BD000C                      mov bp, (0x7c0-STACK_SEG) << 4              ; Correct bp for the disk description table
+    96 00000057 0E                          push cs
+    97 00000058 1F                          pop ds
+    98                                      
+    99 00000059 08D2                        or dl, dl                                   ; When booting from a hard drive, some of the 
+   100 0000005B 7418                        jz loadRoot                                 ; you need to call int 13h to fix some bpb entries
+   101                                  
+   102 0000005D 8816[E501]                  mov byte [drive], dl                        ; Save boot device number
+   103                                  
+   104 00000061 B408                        mov ah, 0x08                                ; Get Drive Parameters func of int 13h
+   105 00000063 CD13                        int 0x13                                    ; Call int 13h (BIOS disk I/O)
+   106 00000065 720E                        jc loadRoot
+   107                                  
+   108 00000067 83E13F                      and cx, 0x003f                              ; Maximum sector number is the high bits 6-7 of cl
+   109 0000006A 894E18                      mov word [sectorsPerTrack], cx              ; And whose low 8 bits are in ch
+   110                                  
+   111 0000006D 88F2                        mov dl, dh                                  ; Convert the maximum head number to a word
+   112 0000006F 30F6                        xor dh, dh
+   113 00000071 42                          inc dx                                      ; Head numbers start at zero, so add one
+   114 00000072 89561A                      mov word [heads], dx                        ; Save the head number
+   115                                  
+   116                                  ;---------------------------------------------------
+   117                                  ; Load the root directory from the disk
+   118                                  ;---------------------------------------------------
+   119                                  
+   120                                  loadRoot:
+   121 00000075 31C9                        xor cx, cx
+   122 00000077 B82000                      mov ax, 32                                  ; Size of root dir = (rootDirEntries * 32) / bytesPerSector
+   123 0000007A F76611                      mul word [rootDirEntries]                   ; Multiply by the total size of the root directory
+   124 0000007D F7760B                      div word [bytesPerSector]                   ; Divided by the number of bytes used per sector
+   125 00000080 91                          xchg cx, ax
+   126                                          
+   127 00000081 8A4610                      mov al, byte [fats]                         ; Location of root dir = (fats * fatSectors) + reservedSectors
+   128 00000084 F76616                      mul word [fatSectors]                       ; Multiply by the sectors used
+   129 00000087 03460E                      add ax, word [reservedSectors]              ; Increase ax by the reserved sectors
+   130                                  
+   131 0000008A A3[E301]                    mov word [userData], ax                     ; start of user data = startOfRoot + numberOfRoot
+   132 0000008D 010E[E301]                  add word [userData], cx                     ; Therefore, just add the size and location of the root directory
+   133                                      
+   134 00000091 BF0010                      mov di, BUFFER_SEG                          ; Set the extra segment to the disk buffer
+   135 00000094 8EC7                        mov es, di
+   136 00000096 BF0000                      mov di, BUFFER_OFF                          ; Set es:di and load the root directory into the disk buffer
+   137 00000099 E8C900                      call readSectors                            ; Read the sectors
+   138                                     
+   139                                  ;---------------------------------------------------
+   140                                  ; Find the file to load from the loaded root dir
+   141                                  ;---------------------------------------------------
+   142                                      
+   143                                  findFile:
+   144 0000009C 8B4E11                      mov cx, word [rootDirEntries]               ; Search through all of the root dir entrys for the kernel
+   145 0000009F 31C0                        xor ax, ax                                  ; Clear ax for the file entry offset
+   146                                      
+   147                                  searchRoot:
+   148 000000A1 FC                          cld
+   149 000000A2 87CA                        xchg cx, dx                                 ; Save current cx value to look for the filename
+   150 000000A4 BE[E601]                    mov si, filename                            ; Load the filename
+   151 000000A7 B90B00                      mov cx, 11                                  ; Compare first 11 bytes
+   152 000000AA F3A6                        rep cmpsb                                   ; Compare si and di cx times
+   153 000000AC 7426                        je loadFat                                  ; We found the file :)
+   154                                  
+   155 000000AE 83C020                      add ax, 32                                  ; File entry offset
+   156 000000B1 BF0000                      mov di, BUFFER_OFF                          ; Point back to the start of the entry
+   157 000000B4 01C7                        add di, ax                                  ; Add the offset to point to the next entry
+   158 000000B6 87D1                        xchg dx, cx
+   159 000000B8 E2E7                        loop searchRoot                             ; Continue to search for the file
+   160                                  
+   161 000000BA BE[D701]                    mov si, fileNotFound                        ; Could not find the file
+   162 000000BD E8FF00                      call print
+   163                                  
+   164                                    reboot:
+   165 000000C0 31C0                        xor ax, ax
+   166 000000C2 CD16                        int 0x16                                    ; Get a single keypress
+   167                                      
+   168 000000C4 B40E                        mov ah, 0x0e                                ; Teletype output
+   169 000000C6 B00D                        mov al, 0x0d                                ; Carriage return
+   170 000000C8 CD10                        int 0x10                                    ; Video interupt
+   171 000000CA B00A                        mov al, 0x0a                                ; Line feed
+   172 000000CC CD10                        int 0x10                                    ; Video interupt
+   173 000000CE CD10                        int 0x10                                    ; Video interupt
+   174                                  
+   175 000000D0 31C0                        xor ax, ax
+   176 000000D2 CD19                        int 0x19                                    ; Reboot the system
+   177                                      
+   178                                  ;---------------------------------------------------
+   179                                  ; Load the fat from the found file   
+   180                                  ;--------------------------------------------------
+   181                                  
+   182                                  loadFat:
+   183 000000D4 268B450F                    mov ax, word [es:di+15]                     ; Get the file cluster at offset 26
+   184 000000D8 50                          push ax                                     ; Store the FAT cluster
+   185                                  
+   186 000000D9 31C0                        xor ax, ax                                  ; Size of fat = (fats * fatSectors)
+   187 000000DB 8A4610                      mov al, byte [fats]                         ; Move number of fats into al
+   188 000000DE F76616                      mul word [fatSectors]                       ; Move fat sectors into bx
+   189 000000E1 89C1                        mov cx, ax                                  ; Store in cx
+   190                                      
+   191 000000E3 8B460E                      mov ax, word [reservedSectors]              ; Convert the first fat on the disk
+   192                                  
+   193 000000E6 BF0000                      mov di, BUFFER_OFF                          ; Set es:di and load the fat sectors into the disk buffer
+   194 000000E9 E87900                      call readSectors                            ; Read the sectors
+   195                                  
+   196                                  ;---------------------------------------------------
+   197                                  ; Load the clusters of the file and jump to it
+   198                                  ;---------------------------------------------------
+   199                                      
+   200                                  loadFile: 
+   201 000000EC BF0001                      mov di, LOAD_SEG
+   202 000000EF 8EC7                        mov es, di                                  ; Set es:di to where the file will load
+   203 000000F1 BF0000                      mov di, LOAD_OFF
+   204                                  
+   205 000000F4 58                          pop ax                                      ; File cluster restored
+   206 000000F5 E80A00                      call readClusters                           ; Read clusters from the file
+   207                                  
+   208 000000F8 8A16[E501]                  mov dl, byte [drive]                        ; Pass the boot drive into dl
+   209 000000FC EA00000001                  jmp LOAD_SEG:LOAD_OFF                       ; Jump to the file loaded!
+   210                                  
+   211 00000101 F4                          hlt                                         ; This should never be hit 
+   212                                  
+   213                                  
+   214                                  ;---------------------------------------------------
+   215                                  ; Bootloader routines below
+   216                                  ;---------------------------------------------------
+   217                                  
+   218                                      
+   219                                  ;---------------------------------------------------
+   220                                  readClusters:
+   221                                  ;
+   222                                  ; Read file clusters, starting at the given cluster,
+   223                                  ; expects FAT to be loaded into the disk buffer.
+   224                                  ;
+   225                                  ; Expects: AX    = Starting cluster
+   226                                  ;          ES:DI = Location to load clusters
+   227                                  ;
+   228                                  ; Returns: None
+   229                                  ;
+   230                                  ;--------------------------------------------------
+   231                                    .clusterLoop:
+   232 00000102 50                          push ax
+   233 00000103 48                          dec ax
+   234 00000104 48                          dec ax
+   235 00000105 31D2                        xor dx, dx
+   236 00000107 30FF                        xor bh, bh                                  ; Get the cluster start = (cluster - 2) * sectorsPerCluster + userData
+   237 00000109 8A5E0D                      mov bl, byte [sectorsPerCluster]            ; Sectors per cluster is a byte value
+   238 0000010C F7E3                        mul bx                                      ; Multiply (cluster - 2) * sectorsPerCluster
+   239 0000010E 0306[E301]                  add ax, word [userData]                     ; Add the userData
+   240                                  
+   241 00000112 30ED                        xor ch, ch
+   242 00000114 8A4E0D                      mov cl, byte [sectorsPerCluster]            ; Sectors to read
+   243 00000117 E84B00                      call readSectors                            ; Read the sectors
+   244                                  
+   245 0000011A 58                          pop ax                                      ; Current cluster number
+   246 0000011B 30FF                        xor bh, bh
+   247                                      
+   248                                    .calculateNextCluster12:                      ; Get the next cluster for FAT12 (cluster + (cluster * 1.5))
+   249 0000011D B303                        mov bl, 3                                   ; We want to multiply by 1.5 so divide by 3/2 
+   250 0000011F F7E3                        mul bx                                      ; Multiply the cluster by the numerator
+   251 00000121 B302                        mov bl, 2                                   ; Return value in ax and remainder in dx
+   252 00000123 F7F3                        div bx                                      ; Divide the cluster by the denominator
+   253                                     
+   254                                    .loadNextCluster:
+   255 00000125 1E                          push ds
+   256 00000126 56                          push si
+   257                                  
+   258 00000127 BE0010                      mov si, BUFFER_SEG
+   259 0000012A 8EDE                        mov ds, si                                  ; Tempararly set ds:si to the FAT buffer
+   260 0000012C BE0000                      mov si, BUFFER_OFF
+   261                                  
+   262 0000012F 01C6                        add si, ax                                  ; Point to the next cluster in the FAT entry
+   263 00000131 3E8B04                      mov ax, word [ds:si]                        ; Load ax to the next cluster in FAT
+   264                                      
+   265 00000134 5E                          pop si
+   266 00000135 1F                          pop ds
+   267                                      
+   268 00000136 09D2                        or dx, dx                                   ; Is the cluster caluclated even?
+   269 00000138 7406                        jz .evenCluster
+   270                                  
+   271                                    .oddCluster:
+   272 0000013A B104                        mov cl, 4                                   ; Drop the first 4 bits of the next cluster
+   273 0000013C D3E8                        shr ax, cl
+   274 0000013E EB03                        jmp .nextClusterCalculated
+   275                                  
+   276                                    .evenCluster:
+   277 00000140 25FF0F                      and ax, 0x0fff                              ; Drop the last 4 bits of next cluster
+   278                                          
+   279                                    .nextClusterCalculated:
+   280 00000143 3DF80F                      cmp ax, 0x0ff8                              ; Are we at the end of the file?
+   281 00000146 731C                        jae .done
+   282                                  
+   283 00000148 91                          xchg cx, ax
+   284 00000149 31D2                        xor dx, dx
+   285 0000014B 30FF                        xor bh, bh                                  ; Calculate the size in bytes per cluster
+   286 0000014D 8B460B                      mov ax, word [bytesPerSector]               ; So, take the bytes per sector
+   287 00000150 8A5E0D                      mov bl, byte [sectorsPerCluster]            ; and mul that by the sectors per cluster
+   288 00000153 F7E3                        mul bx
+   289 00000155 91                          xchg cx, ax
+   290                                      
+   291 00000156 F8                          clc
+   292 00000157 01CF                        add di, cx                                  ; Add to the pointer offset
+   293 00000159 73A7                        jnc .clusterLoop 
+   294                                  
+   295                                    .fixBuffer:                                   ; An error will occur if the buffer in memory
+   296 0000015B 8CC2                        mov dx, es                                  ; overlaps a 64k page boundry, when di overflows
+   297 0000015D 80C610                      add dh, 0x10                                ; it will trigger the carry flag, so correct
+   298 00000160 8EC2                        mov es, dx                                  ; extra segment by 0x1000
+   299                                  
+   300 00000162 EB9E                        jmp .clusterLoop                            ; Load the next file cluster
+   301                                  
+   302                                    .done:
+   303 00000164 C3                          ret
+   304                                    
+   305                                  ;---------------------------------------------------
+   306                                  readSectors:
+   307                                  ;
+   308                                  ; Read sectors starting at a given sector by 
+   309                                  ; the given times and load into a buffer. Please
+   310                                  ; note that this may allocate up to 128KB of ram.
+   311                                  ;
+   312                                  ; Expects: AX    = Starting sector
+   313                                  ;          CX    = Number of sectors to read
+   314                                  ;          ES:DI = Location to load sectors
+   315                                  ;
+   316                                  ; Returns: None
+   317                                  ;
+   318                                  ;--------------------------------------------------
+   319 00000165 50                          push ax
+   320 00000166 53                          push bx
+   321 00000167 51                          push cx
+   322 00000168 52                          push dx
+   323 00000169 57                          push di
+   324 0000016A 06                          push es
+   325                                      
+   326 0000016B 89FB                        mov bx, di                                  ; Convert es:di to es:bx for int 13h
+   327                                  
+   328                                    .sectorLoop:
+   329 0000016D 50                          push ax
+   330 0000016E 51                          push cx
+   331                                  
+   332 0000016F 31D2                        xor dx, dx
+   333 00000171 F77618                      div word [sectorsPerTrack]                  ; Divide the lba (value in ax) by sectorsPerTrack
+   334 00000174 89D1                        mov cx, dx                                  ; Save the absolute sector value 
+   335 00000176 41                          inc cx
+   336                                  
+   337 00000177 31D2                        xor dx, dx                                  ; Divide by the number of heads
+   338 00000179 F7761A                      div word [heads]                            ; to get absolute head and track values
+   339 0000017C 88D6                        mov dh, dl                                  ; Move the absolute head into dh
+   340                                      
+   341 0000017E 88C5                        mov ch, al                                  ; Low 8 bits of absolute track
+   342 00000180 51                          push cx
+   343 00000181 B106                        mov cl, 6                                   ; High 2 bits of absolute track
+   344 00000183 D2E4                        shl ah, cl
+   345 00000185 59                          pop cx
+   346 00000186 08E1                        or cl, ah                                   ; Now cx is set with respective track and sector numbers
+   347                                  
+   348 00000188 8A16[E501]                  mov dl, byte [drive]                        ; Set correct drive for int 13h
+   349                                  
+   350 0000018C BF0500                      mov di, 5                                   ; Try five times to read the sector
+   351                                      
+   352                                    .attemptRead:
+   353 0000018F B80102                      mov ax, 0x0201                              ; Read Sectors func of int 13h, read one sector
+   354 00000192 CD13                        int 0x13                                    ; Call int 13h (BIOS disk I/O)
+   355 00000194 7310                        jnc .readOk                                 ; If no carry set, the sector has been read
+   356                                  
+   357 00000196 30E4                        xor ah, ah                                  ; Reset Drive func of int 13h
+   358 00000198 CD13                        int 0x13                                    ; Call int 13h (BIOS disk I/O)
+   359                                      
+   360 0000019A 4F                          dec di                                      ; Decrease read attempt counter
+   361 0000019B 75F2                        jnz .attemptRead                            ; Try to read the sector again
+   362                                  
+   363 0000019D BE[CB01]                    mov si, diskError                           ; Error reading the disk
+   364 000001A0 E81C00                      call print
+   365 000001A3 E91AFF                      jmp reboot
+   366                                      
+   367                                    .readOk:
+   368 000001A6 59                          pop cx
+   369 000001A7 58                          pop ax
+   370                                  
+   371 000001A8 F8                          clc
+   372 000001A9 40                          inc ax                                      ; Increase the next sector to read
+   373 000001AA 035E0B                      add bx, word [bytesPerSector]               ; Add to the buffer address for the next sector
+   374 000001AD 7307                        jnc .nextSector 
+   375                                  
+   376                                    .fixBuffer:                                   ; An error will occur if the buffer in memory
+   377 000001AF 8CC2                        mov dx, es                                  ; overlaps a 64k page boundry, when bx overflows
+   378 000001B1 80C610                      add dh, 0x10                                ; it will trigger the carry flag, so correct
+   379 000001B4 8EC2                        mov es, dx                                  ; es segment by 0x1000
+   380                                  
+   381                                    .nextSector:
+   382 000001B6 E2B5                        loop .sectorLoop
+   383                                      
+   384 000001B8 07                          pop es
+   385 000001B9 5F                          pop di
+   386 000001BA 5A                          pop dx
+   387 000001BB 59                          pop cx
+   388 000001BC 5B                          pop bx
+   389 000001BD 58                          pop ax
+   390                                  
+   391 000001BE C3                          ret
+   392                                  
+   393                                  ;---------------------------------------------------
+   394                                  print:
+   395                                  ;
+   396                                  ; Print out a simple string.
+   397                                  ;
+   398                                  ; Expects: DS:SI = String to print
+   399                                  ;
+   400                                  ; Returns: None
+   401                                  ;
+   402                                  ;---------------------------------------------------
+   403 000001BF AC                          lodsb                                       ; Load byte from ds:si to al
+   404 000001C0 08C0                        or al, al                                   ; If al is empty stop looping
+   405 000001C2 7406                        jz .done                                    ; Done looping and return
+   406 000001C4 B40E                        mov ah, 0x0e                                ; Teletype output
+   407 000001C6 CD10                        int 0x10                                    ; Video interupt
+   408 000001C8 EBF5                        jmp print                                   ; Loop untill string is null
+   409                                    .done:
+   410 000001CA C3                          ret
+   411                                  
+   412                                      
+   413                                  ;---------------------------------------------------
+   414                                  ; Bootloader varables below
+   415                                  ;---------------------------------------------------
+   416                                  
+   417 000001CB 4469736B206572726F-         diskError      db "Disk error!", 0          ; Error while reading from the disk
+   417 000001D4 722100             
+   418 000001D7 46696C65206572726F-         fileNotFound   db "File error!", 0          ; File was not found
+   418 000001E0 722100             
+   419                                      
+   420 000001E3 0000                        userData       dw 0                         ; Start of the data sectors
+   421 000001E5 00                          drive          db 0                         ; Boot drive number
+   422                                  
+   423 000001E6 44454D4F2020202042-         filename       db "DEMO    BIN"             ; Filename
+   423 000001EF 494E               
+   424                                  
+   425 000001F1 00<rep Dh>                                 times 510 - ($ - $$) db 0    ; Pad remainder of boot sector with zeros
+   426 000001FE 55AA                                       dw 0xaa55                    ; Boot signature

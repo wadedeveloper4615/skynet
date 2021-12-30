@@ -51,3 +51,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 README.md.backup
+tools/default.workspace
+tools/default.workspace.layout
+tools/mkimg/mkimg.cbp
