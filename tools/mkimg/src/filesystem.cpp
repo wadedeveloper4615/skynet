@@ -3,6 +3,7 @@
 #include <sys/timeb.h>
 #include "filesystem.h"
 #include "file.h"
+#include "fat.h"
 
 FileSystem::FileSystem(char *filename)
 {
@@ -27,10 +28,10 @@ _off_t FileSystem::fsize()
     return -1;
 }
 
-void FileSystem::createImage(DWORD blockSize, DWORD numberOfBlocks)
+DWORD FileSystem::createImage(DWORD blockSize, DWORD numberOfBlocks)
 {
     io = new File();
-    io->open(filename,WRITE);
+    io->open(filename,"wb");
     io->seek(0,SEEK_SET);
     BYTE *buffer = new BYTE[blockSize];
     memset(buffer,0,blockSize);
@@ -41,6 +42,6 @@ void FileSystem::createImage(DWORD blockSize, DWORD numberOfBlocks)
     delete[] buffer;
     io->close();
 
-    DWORD fileSize = fsize();
+    return fsize();
 }
 

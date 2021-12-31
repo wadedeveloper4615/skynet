@@ -19,7 +19,7 @@ private:
 public:
     FileSystem(char *filename);
     virtual ~FileSystem();
-    void createImage(DWORD blockSize, DWORD numberOfBlocks);
+    DWORD createImage(DWORD blockSize, DWORD numberOfBlocks);
 protected:
     _off_t fsize();
 };
