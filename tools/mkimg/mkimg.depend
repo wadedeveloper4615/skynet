@@ -1,0 +1,48 @@
+# depslib dependency file v1.0
+1641002226 source:c:\projects\skynet\tools\mkimg\src\file.cpp
+	<windows.h>
+	<tchar.h>
+	<stdio.h>
+	<fcntl.h>
+	<sys/types.h>
+	<sys/stat.h>
+	<io.h>
+	<stdio.h>
+	<strsafe.h>
+	<errno.h>
+	<cstdint>
+	"file.h"
+
+1641002184 c:\projects\skynet\tools\mkimg\src\file.h
+	<windows.h>
+	"types.h"
+
+1641002299 c:\projects\skynet\tools\mkimg\src\types.h
+
+1641005010 source:c:\projects\skynet\tools\mkimg\src\filesystem.cpp
+	<time.h>
+	<sys/time.h>
+	<sys/timeb.h>
+	"filesystem.h"
+	"file.h"
+	"fat.h"
+
+1641006566 c:\projects\skynet\tools\mkimg\src\filesystem.h
+	<sys/stat.h>
+	<sys/types.h>
+	<string.h>
+	<errno.h>
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<stdint.h>
+	"types.h"
+	"file.h"
+	"fat.h"
+
+1641006576 c:\projects\skynet\tools\mkimg\src\fat.h
+	"types.h"
+
+1641005224 source:c:\projects\skynet\tools\mkimg\src\main.cpp
+	"filesystem.h"
+

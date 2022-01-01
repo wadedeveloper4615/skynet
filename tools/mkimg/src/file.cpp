@@ -30,27 +30,27 @@ void File::close()
     fclose(handle);
 }
 
-DWORD File::read(void *buffer,DWORD Size)
+int32u File::read(void *buffer,int32u Size)
 {
-    return fread(buffer, Size,1,handle);
+    return fread(buffer, Size, 1, handle);
 }
 
-DWORD File::write(void *buffer,DWORD Size)
+int32u File::write(void *buffer,int32u Size)
 {
     return fwrite(buffer, Size, 1, handle);
 }
 
-__int64 File::seek(__int64 offset,DWORD origin)
+int64s File::seek(int64s offset,int32u origin)
 {
     return _fseeki64(handle,offset,origin);
 }
 
-__int64 File::tell()
+int64s File::tell()
 {
     return _ftelli64(handle);
 }
 
-DWORD File::read(void *buffer, __int64 offset, DWORD size)
+int32u File::read(void *buffer, int64s offset, int32u size)
 {
     seek(offset,SEEK_SET);
     return read(buffer,size);

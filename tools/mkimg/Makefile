@@ -30,7 +30,7 @@ DEP_DEBUG =
 OUT_DEBUG = bin\\Debug\\mkimg.exe
 
 INC_RELEASE =  $(INC)
-CFLAGS_RELEASE =  $(CFLAGS) -fexpensive-optimizations -O3 -w -std=c++11 -std=c11 -m32
+CFLAGS_RELEASE =  $(CFLAGS) -O3 -w -std=c++11 -std=c11 -m32
 RESINC_RELEASE =  $(RESINC)
 RCFLAGS_RELEASE =  $(RCFLAGS)
 LIBDIR_RELEASE =  $(LIBDIR)

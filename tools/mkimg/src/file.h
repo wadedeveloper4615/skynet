@@ -2,6 +2,7 @@
 #define FILE_H
 
 #include <windows.h>
+#include "types.h"
 
 class File
 {
@@ -10,11 +11,11 @@ public:
     virtual ~File();
 
     void open(LPCTSTR filename,const char *mode);
-    DWORD read(void *buffer,DWORD Size);
-    DWORD write(void *buffer,DWORD Size);
-    __int64 seek(__int64 Offset,DWORD Origin);
-    __int64 tell();
-    DWORD read(void *Buffer, LONGLONG offset, DWORD size);
+    int32u read(void *buffer,int32u Size);
+    int32u write(void *buffer,int32u Size);
+    int64s seek(int64s Offset,int32u Origin);
+    int64s tell();
+    int32u read(void *Buffer, int64s offset, int32u size);
     void close();
     inline FILE *getHandle(){return handle;};
 protected:

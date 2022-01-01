@@ -9,19 +9,22 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include "types.h"
 #include "file.h"
+#include "fat.h"
 
 class FileSystem
 {
 private:
-    char *filename;
+    string filename;
     File *io;
 public:
-    FileSystem(char *filename);
+    FileSystem(string filename);
     virtual ~FileSystem();
-    DWORD createImage(DWORD blockSize, DWORD numberOfBlocks);
+    int32u createImage(int32u blockSize, int32u numberOfBlocks);
+    int8u createFat12(ResourceDataPtr data);
 protected:
-    _off_t fsize();
+    int32s fsize();
 };
 
 #endif // FILESYSTEM_H

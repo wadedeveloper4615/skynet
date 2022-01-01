@@ -1,8 +1,14 @@
 #ifndef FAT_H_INCLUDED
 #define FAT_H_INCLUDED
 
+#include "types.h"
+
 #define BOOTCODE_SIZE		          448
 #define BOOTCODE_FAT32_SIZE	          420
+#define NAME_LEN_MAX  512
+#define POWERofTWO(x) (((x)!=0) && ((x) & ((x) - 1))==0)
+#define SECT_SIZE  512
+#define SECT_RES32  32   // sectors reserved
 
 typedef enum _AttributeFat
 {
@@ -18,60 +24,60 @@ typedef enum _AttributeFat
 #pragma pack(push, 1)
 struct msdos_volume_info
 {
-    uint8_t drive_number;	/* BIOS drive number */
-    uint8_t boot_flags;		/* bit 0: dirty, bit 1: need surface test */
-    uint8_t ext_boot_sign;	/* 0x29 if fields below exist (DOS 3.3+) */
-    uint8_t volume_id[4];	/* Volume ID number */
-    uint8_t volume_label[11];	/* Volume label */
-    uint8_t fs_type[8];		/* Typically FAT12 or FAT16 */
+    int8u drive_number;	    /* BIOS drive number */
+    int8u boot_flags;		/* bit 0: dirty, bit 1: need surface test */
+    int8u ext_boot_sign;	/* 0x29 if fields below exist (DOS 3.3+) */
+    int8u volume_id[4];	    /* Volume ID number */
+    int8u volume_label[11];	/* Volume label */
+    int8u fs_type[8];		/* Typically FAT12 or FAT16 */
 };
 
 struct msdos_boot_sector
 {
-    uint8_t boot_jump[3];	/* Boot strap short or near jump */
-    uint8_t system_id[8];	/* Name - can be used to special case partition manager volumes */
-    uint8_t sector_size[2];	/* bytes per logical sector */
-    uint8_t cluster_size;	/* sectors/cluster */
-    uint16_t reserved;		/* reserved sectors */
-    uint8_t fats;		/* number of FATs */
-    uint8_t dir_entries[2];	/* root directory entries */
-    uint8_t sectors[2];		/* number of sectors */
-    uint8_t media;		/* media code (unused) */
-    uint16_t fat_length;	/* sectors/FAT */
-    uint16_t secs_track;	/* sectors per track */
-    uint16_t heads;		/* number of heads */
-    uint32_t hidden;		/* hidden sectors (unused) */
-    uint32_t total_sect;	/* number of sectors (if sectors == 0) */
+    int8u boot_jump[3];	    /* Boot strap short or near jump */
+    int8u system_id[8];	    /* Name - can be used to special case partition manager volumes */
+    int8u sector_size[2];	/* bytes per logical sector */
+    int8u cluster_size;	    /* sectors/cluster */
+    int16u reserved;		/* reserved sectors */
+    int8u fats;		        /* number of FATs */
+    int8u dir_entries[2];	/* root directory entries */
+    int8u sectors[2];		/* number of sectors */
+    int8u media;		    /* media code (unused) */
+    int16u fat_length;	    /* sectors/FAT */
+    int16u secs_track;	    /* sectors per track */
+    int16u heads;		    /* number of heads */
+    int32u hidden;		    /* hidden sectors (unused) */
+    int32u total_sect;	    /* number of sectors (if sectors == 0) */
     union
     {
         struct
         {
             struct msdos_volume_info vi;
-            uint8_t boot_code[BOOTCODE_SIZE];
+            int8u boot_code[BOOTCODE_SIZE];
         } _oldfat;
         struct
         {
-            uint32_t fat32_length;	/* sectors/FAT */
-            uint16_t flags;		/* bit 8: fat mirroring, low 4: active fat */
-            uint8_t version[2];		/* major, minor filesystem version */
-            uint32_t root_cluster;	/* first cluster in root directory */
-            uint16_t info_sector;	/* filesystem info sector */
-            uint16_t backup_boot;	/* backup boot sector */
-            uint16_t reserved2[6];	/* Unused */
+            int32u fat32_length;	/* sectors/FAT */
+            int16u flags;		    /* bit 8: fat mirroring, low 4: active fat */
+            int8u version[2];		/* major, minor filesystem version */
+            int32u root_cluster;	/* first cluster in root directory */
+            int16u info_sector;	    /* filesystem info sector */
+            int16u backup_boot;	    /* backup boot sector */
+            int16u reserved2[6];	/* Unused */
             struct msdos_volume_info vi;
-            uint8_t boot_code[BOOTCODE_FAT32_SIZE];
+            int8u boot_code[BOOTCODE_FAT32_SIZE];
         } _fat32;
     } fstype;
-    uint16_t boot_sign;
+    int16u boot_sign;
 };
 
 struct fat32_fsinfo
 {
-    uint32_t reserved1;		/* Nothing as far as I can tell */
-    uint32_t signature;		/* 0x61417272L */
-    uint32_t free_clusters;	/* Free cluster count.  -1 if unknown */
-    uint32_t next_cluster;	/* Most recently allocated cluster. Unused under Linux. */
-    uint32_t reserved2[4];
+    int32u reserved1;		/* Nothing as far as I can tell */
+    int32u signature;		/* 0x61417272L */
+    int32u free_clusters;	/* Free cluster count.  -1 if unknown */
+    int32u next_cluster;	/* Most recently allocated cluster. Unused under Linux. */
+    int32u reserved2[4];
 } ;
 
 typedef struct _Partition
@@ -200,6 +206,20 @@ typedef struct _LongDirEntry
     WORD   clust_zero;
     BYTE   name2[4];
 } LongDirEntryFat,*LongDirEntryFatPtr;
+
+typedef struct _ResourceData
+{
+    char mbr_filename[NAME_LEN_MAX];
+    char boot_filename[NAME_LEN_MAX];
+    char targ_filename[NAME_LEN_MAX];
+    int32u file_cnt;
+    int64u base_lba;
+    int64u tot_sectors;
+    int    fatType;
+    int    spc;
+    int    heads;
+    int    spt;
+} ResourceData, *ResourceDataPtr;
 #pragma pack(pop)
 
 #endif // FAT_H_INCLUDED
