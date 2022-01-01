@@ -63,6 +63,6 @@ int8u FileSystem::createFat12(ResourceDataPtr data)
     io->seek(0,SEEK_SET);
     BYTE *buffer = new BYTE[SECT_RES32 * SECT_SIZE];
     memset(buffer,0,SECT_RES32 * SECT_SIZE);
-   return 1;
+    return 1;
 }
 

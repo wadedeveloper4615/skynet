@@ -29,7 +29,6 @@
 *.dylib
 
 # Executables
-*.exe
 *.out
 *.app
 *.i*86
@@ -54,3 +53,16 @@ README.md.backup
 tools/default.workspace
 tools/default.workspace.layout
 tools/mkimg/mkimg.cbp
+tools/Ultimate/.vs/
+*.sbr
+tools/Ultimate/Win32/Debug/Ultimate.tlog/
+tools/Ultimate/Win32/Release/Ultimate.tlog/
+tools/Ultimate/x64/Debug/Ultimate.tlog/bscmake.command.1.tlog
+tools/Ultimate/x64/Debug/Ultimate.tlog/
+tools/Ultimate/x64/Release/Ultimate.tlog/bscmake.read.1.tlog
+tools/Ultimate/x64/Release/Ultimate.tlog/
+*.log
+*.bsc
+*.recipe
+*.res
+*.txt
