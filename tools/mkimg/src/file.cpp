@@ -1,4 +1,3 @@
-#include <windows.h>
 #include <tchar.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -8,16 +7,30 @@
 #include <stdio.h>
 #include <strsafe.h>
 #include <errno.h>
-#include <cstdint>
 #include "file.h"
 
 File::File()
 {
 }
 
-void File::open(LPCTSTR filename,const char *mode)
-{
-    handle = fopen(filename,mode);
+void File::open(const char *filename,FileState state){
+    handle = -1;
+    if (state==READ)
+    {
+        handle = _open(filename,_O_RDONLY|_O_BINARY,_S_IREAD);
+    }
+    if (state==WRITE)
+    {
+        handle = _open(filename,_O_WRONLY|_O_BINARY|_O_CREAT,_S_IWRITE);
+    }
+    if (state==READWRITE)
+    {
+        handle = _open(filename,_O_RDWR|_O_BINARY|_O_CREAT,_S_IREAD|_S_IWRITE);
+    }
+    if (handle == -1)
+    {
+        perror( "Open failed on input file" );
+    }
 }
 
 File::~File()
@@ -27,27 +40,52 @@ File::~File()
 
 void File::close()
 {
-    fclose(handle);
+    _close(handle);
 }
 
 int32u File::read(void *buffer,int32u Size)
 {
-    return fread(buffer, Size, 1, handle);
+    int32u dwBytesRead = _read(handle, buffer, Size);
+    if (dwBytesRead == -1)
+    {
+        perror( "Problem reading file" );
+        close();
+    }
+    return dwBytesRead;
 }
 
 int32u File::write(void *buffer,int32u Size)
 {
-    return fwrite(buffer, Size, 1, handle);
+    int32u dwBytesWritten = _write(handle, buffer, Size);
+    if (dwBytesWritten == -1)
+    {
+        switch(errno)
+        {
+        case EBADF:
+            perror("Bad file descriptor!");
+            break;
+        case ENOSPC:
+            perror("No space left on device!");
+            break;
+        case EINVAL:
+            perror("Invalid parameter: buffer was NULL!");
+            break;
+        default:
+            perror("Unexpected error!");
+        }
+        close();
+    }
+    return dwBytesWritten;
 }
 
 int64s File::seek(int64s offset,int32u origin)
 {
-    return _fseeki64(handle,offset,origin);
+    return _lseeki64(handle,offset,origin);
 }
 
 int64s File::tell()
 {
-    return _ftelli64(handle);
+    return _telli64(handle);
 }
 
 int32u File::read(void *buffer, int64s offset, int32u size)

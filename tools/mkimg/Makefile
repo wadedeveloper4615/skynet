@@ -40,9 +40,9 @@ OBJDIR_RELEASE = obj\\Release
 DEP_RELEASE = 
 OUT_RELEASE = bin\\Release\\mkimg.exe
 
-OBJ_DEBUG = $(OBJDIR_DEBUG)\\src\\file.o $(OBJDIR_DEBUG)\\src\\filesystem.o $(OBJDIR_DEBUG)\\src\\main.o
+OBJ_DEBUG = $(OBJDIR_DEBUG)\\src\\file.o $(OBJDIR_DEBUG)\\src\\mkdosfs.o
 
-OBJ_RELEASE = $(OBJDIR_RELEASE)\\src\\file.o $(OBJDIR_RELEASE)\\src\\filesystem.o $(OBJDIR_RELEASE)\\src\\main.o
+OBJ_RELEASE = $(OBJDIR_RELEASE)\\src\\file.o $(OBJDIR_RELEASE)\\src\\mkdosfs.o
 
 all: debug release
 
@@ -62,11 +62,8 @@ out_debug: before_debug $(OBJ_DEBUG) $(DEP_DEBUG)
 $(OBJDIR_DEBUG)\\src\\file.o: src\\file.cpp
 	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c src\\file.cpp -o $(OBJDIR_DEBUG)\\src\\file.o
 
-$(OBJDIR_DEBUG)\\src\\filesystem.o: src\\filesystem.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c src\\filesystem.cpp -o $(OBJDIR_DEBUG)\\src\\filesystem.o
-
-$(OBJDIR_DEBUG)\\src\\main.o: src\\main.cpp
-	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c src\\main.cpp -o $(OBJDIR_DEBUG)\\src\\main.o
+$(OBJDIR_DEBUG)\\src\\mkdosfs.o: src\\mkdosfs.cpp
+	$(CXX) $(CFLAGS_DEBUG) $(INC_DEBUG) -c src\\mkdosfs.cpp -o $(OBJDIR_DEBUG)\\src\\mkdosfs.o
 
 clean_debug: 
 	cmd /c del /f $(OBJ_DEBUG) $(OUT_DEBUG)
@@ -87,11 +84,8 @@ out_release: before_release $(OBJ_RELEASE) $(DEP_RELEASE)
 $(OBJDIR_RELEASE)\\src\\file.o: src\\file.cpp
 	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c src\\file.cpp -o $(OBJDIR_RELEASE)\\src\\file.o
 
-$(OBJDIR_RELEASE)\\src\\filesystem.o: src\\filesystem.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c src\\filesystem.cpp -o $(OBJDIR_RELEASE)\\src\\filesystem.o
-
-$(OBJDIR_RELEASE)\\src\\main.o: src\\main.cpp
-	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c src\\main.cpp -o $(OBJDIR_RELEASE)\\src\\main.o
+$(OBJDIR_RELEASE)\\src\\mkdosfs.o: src\\mkdosfs.cpp
+	$(CXX) $(CFLAGS_RELEASE) $(INC_RELEASE) -c src\\mkdosfs.cpp -o $(OBJDIR_RELEASE)\\src\\mkdosfs.o
 
 clean_release: 
 	cmd /c del /f $(OBJ_RELEASE) $(OUT_RELEASE)
