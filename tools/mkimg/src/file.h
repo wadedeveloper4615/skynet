@@ -13,10 +13,10 @@ typedef enum _FileState
 class File
 {
 public:
-    File();
+    File(const char *filename);
     virtual ~File();
 
-    void open(const char *filename,FileState state);
+    void open(FileState state);
     int32u read(void *buffer,int32u Size);
     int32u write(void *buffer,int32u Size);
     int64s seek(int64s Offset,int32u Origin);
@@ -27,6 +27,7 @@ public:
 protected:
 private:
     int handle;
+    const char *filename;
 };
 
 #endif // FILE_H

@@ -75,129 +75,129 @@ struct fat32_fsinfo
 
 typedef struct _Partition
 {
-    BYTE status;           //0x80 for bootable, 0x00 for not bootable, anything else for invalid
-    BYTE StartAddrHead;    //head address of start of partition
-    WORD StartAddrCylSec;  //(AddrCylSec & 0x3F) for sector,  (AddrCylSec & 0x3FF) for cylendar
-    BYTE type;
-    BYTE EndAddrHead;      //head address of start of partition
-    WORD EndAddrCylSec;    //(AddrCylSec & 0x3F) for sector,  (AddrCylSec & 0x3FF) for cylendar
-    DWORD StartLBA;        //linear address of first sector in partition. Multiply by sector size (usually 512) for real offset
-    DWORD EndLBA;          //linear address of last sector in partition. Multiply by sector size (usually 512) for real offset
+    int8u status;           //0x80 for bootable, 0x00 for not bootable, anything else for invalid
+    int8u StartAddrHead;    //head address of start of partition
+    int16u StartAddrCylSec;  //(AddrCylSec & 0x3F) for sector,  (AddrCylSec & 0x3FF) for cylendar
+    int8u type;
+    int8u EndAddrHead;      //head address of start of partition
+    int16u EndAddrCylSec;    //(AddrCylSec & 0x3F) for sector,  (AddrCylSec & 0x3FF) for cylendar
+    int32u StartLBA;        //linear address of first sector in partition. Multiply by sector size (usually 512) for real offset
+    int32u EndLBA;          //linear address of last sector in partition. Multiply by sector size (usually 512) for real offset
 } Partition, *PartitionPtr;
 
 typedef struct _MBR
 {
-    BYTE Code[440];
-    DWORD DiskSig;
-    WORD Reserved;
+    int8u Code[440];
+    int32u DiskSig;
+    int16u Reserved;
     Partition partition[4];
-    WORD BootSignature;
+    int16u BootSignature;
 } MBR,*MBRPtr;
 
 typedef struct _BioParameterBlock
 {
-    BYTE   BS_jmpBoot[3];
+    int8u   BS_jmpBoot[3];
     char   BS_OEMName[8];
-    WORD   BPB_BytsPerSec;
-    BYTE   BPB_SecPerClus;
-    WORD   BPB_RsvdSecCnt;
-    BYTE   BPB_NumFATs;
-    WORD   BPB_RootEntCnt;
-    WORD   BPB_TotSec16;
-    BYTE   BPB_Media;
-    WORD   BPB_FATSz16;
-    WORD   BPB_SecPerTrk;
-    WORD   BPB_NumHeads;
-    DWORD  BPB_HiddSec;
-    DWORD  BPB_TotSec32;
+    int16u   BPB_BytsPerSec;
+    int8u   BPB_SecPerClus;
+    int16u   BPB_RsvdSecCnt;
+    int8u   BPB_NumFATs;
+    int16u   BPB_RootEntCnt;
+    int16u   BPB_TotSec16;
+    int8u   BPB_Media;
+    int16u   BPB_FATSz16;
+    int16u   BPB_SecPerTrk;
+    int16u   BPB_NumHeads;
+    int32u  BPB_HiddSec;
+    int32u  BPB_TotSec32;
 } BioParameterBlock,*BioParameterBlockPtr;
 
 typedef struct _FAT1216BootSector
 {
     BioParameterBlock bpb;
-    BYTE   BS_DrvNum;
-    BYTE   BS_Reserved1;
-    BYTE   BS_BootSig;
-    DWORD  BS_VolID;
+    int8u   BS_DrvNum;
+    int8u   BS_Reserved1;
+    int8u   BS_BootSig;
+    int32u  BS_VolID;
     char   BS_VolLab[11];
     char   BS_FilSysType[8];
-    BYTE   bootCode[BOOTCODE_SIZE];
-    WORD   bootSignature;
+    int8u   bootCode[BOOTCODE_SIZE];
+    int16u   bootSignature;
 } FAT1216BootSector, *FAT1216BootSectorPtr;
 
 typedef struct _FAT32BootSector
 {
     BioParameterBlock bpb;
-    DWORD  BPB_FATSz32;
-    WORD   BPB_ExtFlags;
-    WORD   BPB_FSVer;
-    DWORD  BPB_RootClus;
-    WORD   BPB_FSInfo;
-    WORD   BPB_BkBootSec;
-    BYTE   BPB_Reserved[12];
-    BYTE   BS_DrvNum;
-    BYTE   BS_Reserved1;
-    BYTE   BS_BootSig;
-    DWORD  BS_VolID;
+    int32u  BPB_FATSz32;
+    int16u   BPB_ExtFlags;
+    int16u   BPB_FSVer;
+    int32u  BPB_RootClus;
+    int16u   BPB_FSInfo;
+    int16u   BPB_BkBootSec;
+    int8u   BPB_Reserved[12];
+    int8u   BS_DrvNum;
+    int8u   BS_Reserved1;
+    int8u   BS_BootSig;
+    int32u  BS_VolID;
     char   BS_VolLab[11];
     char   BS_FilSysType[8];
-    BYTE   bootCode[BOOTCODE_FAT32_SIZE];
-    WORD   bootSignature;
+    int8u   bootCode[BOOTCODE_FAT32_SIZE];
+    int16u   bootSignature;
 } FAT32BootSector, *FAT32BootSectorPtr;
 
 typedef struct _FAT32FSInfo
 {
-    DWORD  FSI_LeadSig;        // 0x41615252 ("RRaA")
-    BYTE   FSI_Reserved1[480]; // reserved
-    DWORD  FSI_StrucSig;       // 0x61417272 ("rrAa")
-    DWORD  FSI_Free_Count;     // -1 when the count is unknown
-    DWORD  FSI_Nxt_Free;       // most recent allocated cluster
-    BYTE   FSI_Reserved2[12];  // reserved
-    DWORD  FSI_TrailSig;       // 0xAA550000  (00 00 55 AA)
+    int32u  FSI_LeadSig;        // 0x41615252 ("RRaA")
+    int8u   FSI_Reserved1[480]; // reserved
+    int32u  FSI_StrucSig;       // 0x61417272 ("rrAa")
+    int32u  FSI_Free_Count;     // -1 when the count is unknown
+    int32u  FSI_Nxt_Free;       // most recent allocated cluster
+    int8u   FSI_Reserved2[12];  // reserved
+    int32u  FSI_TrailSig;       // 0xAA550000  (00 00 55 AA)
 } FAT32FSInfo, *FAT32FSInfoPtr;
 
 typedef struct _DirEntry
 {
     union
     {
-        BYTE  name[8];
+        int8u  name[8];
         struct
         {
-            BYTE allocationStatus;
-            BYTE dummy[7];
+            int8u allocationStatus;
+            int8u dummy[7];
         } ;
     } statusName;
-    BYTE   ext[3];
-    BYTE   attrb;
+    int8u   ext[3];
+    int8u   attrb;
     union
     {
-        BYTE   resv[10];
+        int8u   resv[10];
         struct
         {
-            BYTE   nt_resv;
-            BYTE   crt_time_tenth;
-            WORD   crt_time;
-            WORD   crt_date;
-            WORD   crt_last;
-            WORD   strtclst32;
+            int8u   nt_resv;
+            int8u   crt_time_tenth;
+            int16u   crt_time;
+            int16u   crt_date;
+            int16u   crt_last;
+            int16u   strtclst32;
         } fat32;
     } type;
-    WORD   time;
-    WORD   date;
-    WORD   strtclst;
-    DWORD  filesize;
+    int16u   time;
+    int16u   date;
+    int16u   strtclst;
+    int32u  filesize;
 } DirEntryFat,*DirEntryFatPtr;
 
 typedef struct _LongDirEntry
 {
-    BYTE   sequ_flags;
-    BYTE   name0[10];
-    BYTE   attrb;
-    BYTE   resv;
-    BYTE   sfn_crc;
-    BYTE   name1[12];
-    WORD   clust_zero;
-    BYTE   name2[4];
+    int8u   sequ_flags;
+    int8u   name0[10];
+    int8u   attrb;
+    int8u   resv;
+    int8u   sfn_crc;
+    int8u   name1[12];
+    int16u   clust_zero;
+    int8u   name2[4];
 } LongDirEntryFat,*LongDirEntryFatPtr;
 #pragma pack(pop)
 

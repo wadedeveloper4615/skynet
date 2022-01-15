@@ -5,11 +5,11 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
-#include "file.h"
+#include "fat12.h"
 
 void createEmptyFile(File& file, int64u sectors, int32u sectorSize)
 {
-    file.open("C:\\projects\\skynet\\tools\\mkimg\\images\\fat12.img",WRITE);
+    file.open(WRITE);
     file.seek(SEEK_SET,0);
     char buffer[sectorSize];
     for (int i=0; i<sectors; i++)
@@ -20,9 +20,14 @@ void createEmptyFile(File& file, int64u sectors, int32u sectorSize)
     file.close();
 }
 
+void createFat12FileSystem(File *file){
+    FAT12 fat(file);
+}
+
 int main(int argc, char *argv[])
 {
-    File file;
+    File file("C:\\projects\\skynet\\tools\\mkimg\\images\\fat12.img");
     createEmptyFile(file,2880,512);
+    createFat12FileSystem(&file);
     return 0;
 }

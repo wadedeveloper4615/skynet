@@ -9,11 +9,12 @@
 #include <errno.h>
 #include "file.h"
 
-File::File()
+File::File(const char *filename)
 {
+    this->filename = filename;
 }
 
-void File::open(const char *filename,FileState state){
+void File::open(FileState state){
     handle = -1;
     if (state==READ)
     {

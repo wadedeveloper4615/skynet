@@ -9,15 +9,15 @@
 #include <stdint.h>
 #include "fat12.h"
 
-FAT12::FAT12(char *filename)
+FAT12::FAT12(File* file)
 {
     bootSector = new FAT1216BootSector;
-    io = new File();
-    io->open(filename,READ);
+    this->file=file;
+    file->open(READ);
 }
 
 FAT12::~FAT12()
 {
     delete bootSector;
-    delete io;
+    file->close();
 }

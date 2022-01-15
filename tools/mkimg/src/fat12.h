@@ -11,7 +11,7 @@ class FAT12 : public FATFileSystem
 private:
     FAT1216BootSectorPtr bootSector;
 public:
-    FAT12(char *filename);
+    FAT12(File *file);
     virtual ~FAT12();
 };
 

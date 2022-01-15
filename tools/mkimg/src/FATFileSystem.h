@@ -4,11 +4,11 @@
 class FATFileSystem
 {
 protected:
-    File *io;
+    File *file;
 public:
-    virtual void parse()=0;
-    virtual void print()=0;
-    virtual void printRootDir()=0;
+    //virtual void parse()=0;
+    //virtual void print()=0;
+    //virtual void printRootDir()=0;
 };
 
 
