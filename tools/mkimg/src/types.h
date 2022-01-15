@@ -11,4 +11,7 @@ typedef   signed  long long  int64s;
 typedef unsigned  long long  int64u;
 typedef           char*     string;
 
+#define BOOTCODE_SIZE		          448
+#define BOOTCODE_FAT32_SIZE	          420
+
 #endif // TYPES_H_INCLUDED
