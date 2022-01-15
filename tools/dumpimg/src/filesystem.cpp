@@ -37,6 +37,8 @@ char dummy_boot_code[BOOTCODE_SIZE] = "\x0e"	/* push cs */
 FileSystem::FileSystem(char *filename)
 {
     this->filename = filename;
+    this->io = new File();
+    this->io->open(filename,READWRITE);
 }
 
 FileSystem::~FileSystem()

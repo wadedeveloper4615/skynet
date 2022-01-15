@@ -15,7 +15,7 @@ File::File()
 {
 }
 
-void File::open(LPCTSTR filename,FileState state){
+void File::open(char *filename,FileState state){
     handle = -1;
     if (state==READ)
     {

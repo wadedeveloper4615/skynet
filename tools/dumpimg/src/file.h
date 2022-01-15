@@ -16,7 +16,7 @@ public:
     File();
     virtual ~File();
 
-    void open(LPCTSTR filename,FileState state);
+    void open(char *filename,FileState state);
     DWORD read(void *buffer,DWORD Size);
     DWORD write(void *buffer,DWORD Size);
     __int64 seek(__int64 Offset,DWORD Origin);
