@@ -1,0 +1,112 @@
+# depslib dependency file v1.0
+1628106106 source:c:\projects\skynet\tools\dumpimg\src\exfat.cpp
+	<windows.h>
+	<sys/stat.h>
+	<sys/types.h>
+	<string.h>
+	<errno.h>
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<stdint.h>
+	"exfat.h"
+
+1627587374 c:\projects\skynet\tools\dumpimg\src\exfat.h
+	"file.h"
+	"FATFileSystem.h"
+
+1642264445 c:\projects\skynet\tools\dumpimg\src\file.h
+	<windows.h>
+
+1627587374 c:\projects\skynet\tools\dumpimg\src\fatfilesystem.h
+
+1628106154 source:c:\projects\skynet\tools\dumpimg\src\fat16.cpp
+	<windows.h>
+	<sys/stat.h>
+	<sys/types.h>
+	<string.h>
+	<errno.h>
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<stdint.h>
+	"fat16.h"
+
+1628008448 c:\projects\skynet\tools\dumpimg\src\fat16.h
+	<string>
+	"file.h"
+	"fat.h"
+	"FATFileSystem.h"
+
+1628104840 c:\projects\skynet\tools\dumpimg\src\fat.h
+	"FatData.h"
+
+1627923788 c:\projects\skynet\tools\dumpimg\src\fatdata.h
+
+1628106112 source:c:\projects\skynet\tools\dumpimg\src\fat32.cpp
+	<windows.h>
+	<sys/stat.h>
+	<sys/types.h>
+	<string.h>
+	<errno.h>
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<stdint.h>
+	"fat32.h"
+
+1628010000 c:\projects\skynet\tools\dumpimg\src\fat32.h
+	<string>
+	"file.h"
+	"fat.h"
+	"FATFileSystem.h"
+
+1642264454 source:c:\projects\skynet\tools\dumpimg\src\file.cpp
+	<windows.h>
+	<tchar.h>
+	<stdio.h>
+	<fcntl.h>
+	<sys/types.h>
+	<sys/stat.h>
+	<io.h>
+	<stdio.h>
+	<strsafe.h>
+	<errno.h>
+	<cstdint>
+	"file.h"
+
+1642266139 source:c:\projects\skynet\tools\dumpimg\src\filesystem.cpp
+	<time.h>
+	<sys/time.h>
+	<sys/timeb.h>
+	"filesystem.h"
+	"file.h"
+
+1642265701 c:\projects\skynet\tools\dumpimg\src\filesystem.h
+	<sys/stat.h>
+	<sys/types.h>
+	<string.h>
+	<errno.h>
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<stdint.h>
+	"file.h"
+	"FATFileSystem.h"
+	"fat12.h"
+	"fat16.h"
+	"fat32.h"
+	"exfat.h"
+	"FatData.h"
+	"Fat.h"
+
+1642273828 c:\projects\skynet\tools\dumpimg\src\fat12.h
+	<string>
+	"file.h"
+	"fat.h"
+	"FATFileSystem.h"
+
+1642263914 source:c:\projects\skynet\tools\dumpimg\src\main.cpp
+	"filesystem.h"
+	"FatData.h"
+
