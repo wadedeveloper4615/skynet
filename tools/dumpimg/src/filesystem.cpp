@@ -219,7 +219,7 @@ void FileSystem::parse()
     }
     delete[] buffer;
 }
-
+/*
 off_t FileSystem::fsize()
 {
     struct stat st;
@@ -378,7 +378,6 @@ __int64 FileSystem::info(int handle)
     }
     if (S_ISREG(stat.st_mode))
     {
-        /* there is nothing more to discover for an image file */
         devInfo.type = TYPE_FILE;
         devInfo.partition = 0;
         devInfo.size = stat.st_size;
@@ -388,7 +387,6 @@ __int64 FileSystem::info(int handle)
 
     if (!S_ISBLK(stat.st_mode))
     {
-        /* neither regular file nor block device? not usable */
         devInfo.type = TYPE_BAD;
         return 0;
     }
@@ -405,7 +403,7 @@ void FileSystem::establish_params()
     unsigned int sec_per_track;
     unsigned int heads;
     unsigned int media = 0xf8;
-    unsigned int cluster_size = 4;  /* starting point for FAT12 and FAT16 */
+    unsigned int cluster_size = 4;
     int def_root_dir_entries = 512;
 
     if (devInfo.geom_heads > 0)
@@ -426,7 +424,6 @@ void FileSystem::establish_params()
 
         if (total_sectors <= 524288)
         {
-            /* For capacity below the 256MB (with 512b sectors) use CHS Recommendation from SD Card Part 2 File System Specification */
             heads = total_sectors <=  32768 ? 2 :
                     total_sectors <=  65536 ? 4 :
                     total_sectors <= 262144 ? 8 : 16;
@@ -434,7 +431,6 @@ void FileSystem::establish_params()
         }
         else
         {
-            /* Use LBA-Assist Translation for calculating CHS when disk geometry is not available */
             heads = total_sectors <=  16*63*1024 ? 16 :
                     total_sectors <=  32*63*1024 ? 32 :
                     total_sectors <=  64*63*1024 ? 64 :
@@ -444,7 +440,6 @@ void FileSystem::establish_params()
     }
     if (devInfo.type != TYPE_FIXED)
     {
-        /* enter default parameters for floppy disks if the size matches */
         switch (devInfo.size / 1024)
         {
         case 360:
@@ -511,11 +506,9 @@ uint32_t FileSystem::generate_volume_id(void)
     if (gettimeofday(&now, NULL) != 0 || now.tv_sec == (time_t)-1 || now.tv_sec < 0)
     {
         srand(time(NULL));
-        /* rand() returns int from [0,RAND_MAX], therefore only 31 bits */
         return (((uint32_t)(rand() & 0xFFFF)) << 16) | ((uint32_t)(rand() & 0xFFFF));
     }
 
-    /* volume ID = current time, fudged for more uniqueness */
     return ((uint32_t)now.tv_sec << 20) | (uint32_t)now.tv_usec;
 }
 
@@ -541,7 +534,7 @@ void FileSystem::setup_tables(FSType fileSystemType)
 
     memcpy(label, NO_NAME, MSDOS_NAME);
 
-    long volume_id = this->generate_volume_id();		/* Volume ID number */
+    long volume_id = this->generate_volume_id();
     vi->volume_id[0] = (unsigned char)(volume_id & 0x000000ff);
     vi->volume_id[1] = (unsigned char)((volume_id & 0x0000ff00) >> 8);
     vi->volume_id[2] = (unsigned char)((volume_id & 0x00ff0000) >> 16);
@@ -549,7 +542,6 @@ void FileSystem::setup_tables(FSType fileSystemType)
     memcpy(vi->volume_label, label, 11);
 
     memcpy(bs.boot_jump, dummy_boot_jump, 3);
-    /* Patch in the correct offset to the boot code */
     bs.boot_jump[1] = ((size_fat == 32 ?
                         (char *)&bs.fat32.boot_code :
                         (char *)&bs.oldfat.boot_code) - (char *)&bs) - 2;
@@ -599,3 +591,4 @@ void FileSystem::gatherDeviceInformation(FSType fileSystemType){
 
     io->close();
 }
+*/

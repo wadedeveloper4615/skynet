@@ -65,44 +65,13 @@ public:
     FileSystem(char *filename);
     virtual ~FileSystem();
     void parse();
-    void createImage(DWORD blockSize, DWORD numberOfBlocks);
-    void gatherDeviceInformation(FSType fileSystemType);
 public:
-    __int64 info();
-    DeviceInfo devInfo;
-    void establish_params();
-    struct msdos_boot_sector bs;	/* Boot sector data */
-    int size_fat;	/* Size in bits of FAT entries */
-    int root_dir_entries;	/* Number of root directory entries */
-    unsigned hidden_sectors;	/* Number of hidden sectors */
-    int sectors_per_cluster;	/* Number of sectors per disk cluster */
-    int nr_fats;		/* Default number of FATs to produce */
-    unsigned long long cblocks;
-    off_t part_sector; /* partition offset in sector */
-    int orphaned_sectors;	/* Sectors that exist in the last block of filesystem */
 protected:
     BOOL power_of_two(DWORD val);
     FSType DetectFatSize(FAT1216BootSectorPtr bpb);
     FSType DetectFat(FAT1216BootSectorPtr bpb);
     int DetectMBR(MBRPtr mbr);
     FSType DetectExFat(EXFATBootSectorPtr vbr);
-    off_t fsize();
-protected:
-    long blkdev_valid_offset(int handle,off_t offset);
-    int is_blkdev(int handle);
-
-    void get_block_device_size(int handle,DeviceInfoPtr info);
-    void get_block_geometry(DeviceInfoPtr info, dev_t rdev);
-    void get_sector_size(DeviceInfoPtr info);
-
-    off_t blkdev_find_size(int handle);
-    int blkdev_get_size(int handle,unsigned long long *bytes);
-    int blkdev_get_geometry(unsigned int *h, unsigned int *s);
-    int blkdev_get_start(dev_t rdev, unsigned long long *s);
-    int blkdev_get_sector_size(int *sector_size);
-    void setup_tables(FSType fileSystemType);
-    __int64 info(int handle);
-    uint32_t generate_volume_id(void);
 };
 
 #endif // FILESYSTEM_H
