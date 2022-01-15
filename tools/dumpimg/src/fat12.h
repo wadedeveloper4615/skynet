@@ -21,6 +21,7 @@ private:
     DirEntryFatPtr rootDir;
     std::string *list;
     int numberOfEntries;
+    int numberOfLFNEntries;
 public:
     FAT12(char *filename);
     virtual ~FAT12();

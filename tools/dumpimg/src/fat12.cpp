@@ -188,21 +188,58 @@ void FAT12::printRootDir()
     printf("\nDate     Time     Attr    Size     Cluster SFN         LFN\n");
     for(int i=0; i<numberOfEntries; i++)
     {
-        char shortname[12];
-        char buffer1[10];
-        char buffer2[10];
+        if (rootDir[i].attrb==ATTR_LONG_FILE_NAME)
+        {
+            LongDirEntryFatPtr lfn = (LongDirEntryFatPtr)&rootDir[i];
+            char *name0 = extractLongFileName((char *)lfn->name0,10);
+            char *name1 = extractLongFileName((char *)lfn->name1,12);
+            char *name2 = extractLongFileName((char *)lfn->name2,4);
+            char longname[30];
+            memset(longname,0,sizeof(longname));
+            sprintf(longname,"%s%s%s",name0,name1,name2);
+            if (lfn->sequ_flags>0x40)
+            {
+                numberOfLFNEntries = lfn->sequ_flags-0x40;
+                list = new std::string[numberOfLFNEntries];
+                list[numberOfLFNEntries-1]=longname;
+            }
+            else
+            {
+                list[lfn->sequ_flags-1]=longname;
+            }
+        }
+        else
+        {
+            char shortname[12];
+            char buffer1[10];
+            char buffer2[10];
 
-        memset(shortname,0,sizeof(shortname));
-        memset(buffer1,0,sizeof(buffer1));
-        memset(buffer2,0,sizeof(buffer2));
+            memset(shortname,0,sizeof(shortname));
+            memset(buffer1,0,sizeof(buffer1));
+            memset(buffer2,0,sizeof(buffer2));
 
-        char *name = extractShortFileName((char *)rootDir[i].statusName.name,8);
-        char *ext = extractShortFileName((char *)rootDir[i].ext,3);
-        char *attr = getAttrString(&rootDir[i]);
-        char *mtime = getModifiedTime((char *)buffer1,sizeof(buffer1),&rootDir[i]);
-        char *mdate = getModifiedDate((char *)buffer2,sizeof(buffer2),&rootDir[i]);
-        sprintf(shortname,"%s.%s",name,ext);
-
-        printf("%.*s %.*s %.*s % -8d % -8d % -11s\n", 8, mdate, 8, mtime, 6, attr, rootDir[i].filesize, rootDir[i].strtclst, shortname);
+            char *name = extractShortFileName((char *)rootDir[i].statusName.name,8);
+            char *ext = extractShortFileName((char *)rootDir[i].ext,3);
+            char *attr = getAttrString(&rootDir[i]);
+            char *mtime = getModifiedTime((char *)buffer1,sizeof(buffer1),&rootDir[i]);
+            char *mdate = getModifiedDate((char *)buffer2,sizeof(buffer2),&rootDir[i]);
+            sprintf(shortname,"%s.%s",name,ext);
+            std::string lname;
+            if (list!=NULL)
+            {
+                lname=list[0];
+                for (int i=1; i<numberOfLFNEntries; i++)
+                {
+                    lname.append(list[i]);
+                }
+            }
+            printf("%.*s %.*s %.*s % -8d % -8d % -11s %.*s\n", 8, mdate, 8, mtime, 6, attr, rootDir[i].filesize, rootDir[i].strtclst, shortname,256,lname.c_str());
+            if (list!=NULL)
+            {
+                delete[] list;
+                list = NULL;
+                numberOfLFNEntries=0;
+            }
+        }
     }
 }
