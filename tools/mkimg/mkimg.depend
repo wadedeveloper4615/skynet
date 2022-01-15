@@ -1,6 +1,5 @@
 # depslib dependency file v1.0
-1641002226 source:c:\projects\skynet\tools\mkimg\src\file.cpp
-	<windows.h>
+1642216536 source:c:\projects\skynet\tools\mkimg\src\file.cpp
 	<tchar.h>
 	<stdio.h>
 	<fcntl.h>
@@ -10,14 +9,12 @@
 	<stdio.h>
 	<strsafe.h>
 	<errno.h>
-	<cstdint>
 	"file.h"
 
-1641002184 c:\projects\skynet\tools\mkimg\src\file.h
-	<windows.h>
+1642216599 c:\projects\skynet\tools\mkimg\src\file.h
 	"types.h"
 
-1641002299 c:\projects\skynet\tools\mkimg\src\types.h
+1642215859 c:\projects\skynet\tools\mkimg\src\types.h
 
 1641005010 source:c:\projects\skynet\tools\mkimg\src\filesystem.cpp
 	<time.h>
@@ -40,9 +37,38 @@
 	"file.h"
 	"fat.h"
 
-1641006576 c:\projects\skynet\tools\mkimg\src\fat.h
+1642217260 c:\projects\skynet\tools\mkimg\src\fat.h
 	"types.h"
 
 1641005224 source:c:\projects\skynet\tools\mkimg\src\main.cpp
 	"filesystem.h"
+
+1642217650 source:c:\projects\skynet\tools\mkimg\src\fat12.cpp
+	<windows.h>
+	<sys/stat.h>
+	<sys/types.h>
+	<string.h>
+	<errno.h>
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<stdint.h>
+	"fat12.h"
+
+1642217725 c:\projects\skynet\tools\mkimg\src\fat12.h
+	"file.h"
+	"fat.h"
+	"FATFileSystem.h"
+
+1642216909 c:\projects\skynet\tools\mkimg\src\fatfilesystem.h
+
+1642217702 source:c:\projects\skynet\tools\mkimg\src\mkdosfs.cpp
+	<ctype.h>
+	<conio.h>
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<time.h>
+	<math.h>
+	"fat12.h"
 
