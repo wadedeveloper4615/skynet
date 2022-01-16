@@ -116,8 +116,8 @@ void FAT12::print()
     printf("Root Dir Sector   :  %4ld\t%4ld\n", RootSectorStart,RootSectorSize);
     printf("Data Sector       :  %4ld\t%4ld\n", DataSectorStart,DataSectorSize);
 
-    //printf("\n");
-    //printf("Number of root entries: %d\n",numberOfEntries);
+    printf("\n");
+    printf("Number of root entries: %d\n",numberOfEntries);
 }
 
 char *FAT12::extractLongFileName(char *name,int size)
@@ -179,13 +179,13 @@ char *FAT12::getModifiedTime(char *buffer, int size, DirEntryFatPtr entry)
 char *FAT12::getModifiedDate(char *buffer, int size, DirEntryFatPtr entry)
 {
     int d = entry->date;
-    sprintf(buffer,"%02d/%02d/%02d", (d & 0x01E0) >> 5, (d & 0x001F) >> 0,(d >> 9) + 1980);
+    sprintf(buffer,"%02d/%02d/%04d", (d & 0x01E0) >> 5, (d & 0x001F) >> 0,(d >> 9) + 1980);
     return buffer;
 }
 
 void FAT12::printRootDir()
 {
-    printf("\nDate     Time     Attr    Size     Cluster SFN         LFN\n");
+    printf("\nDate       Time     Attr    Size     Cluster SFN         LFN\n");
     for(int i=0; i<numberOfEntries; i++)
     {
         if (rootDir[i].attrb==ATTR_LONG_FILE_NAME)
@@ -211,8 +211,8 @@ void FAT12::printRootDir()
         else
         {
             char shortname[12];
-            char buffer1[10];
-            char buffer2[10];
+            char buffer1[12];
+            char buffer2[12];
 
             memset(shortname,0,sizeof(shortname));
             memset(buffer1,0,sizeof(buffer1));
@@ -233,7 +233,7 @@ void FAT12::printRootDir()
                     lname.append(list[i]);
                 }
             }
-            printf("%.*s %.*s %.*s % -8d % -8d % -11s %.*s\n", 8, mdate, 8, mtime, 6, attr, rootDir[i].filesize, rootDir[i].strtclst, shortname,256,lname.c_str());
+            printf("%.*s %.*s %.*s % -8d % -8d % -11s %.*s\n", 10, mdate, 8, mtime, 6, attr, rootDir[i].filesize, rootDir[i].strtclst, shortname,256,lname.c_str());
             if (list!=NULL)
             {
                 delete[] list;

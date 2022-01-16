@@ -12,14 +12,19 @@ private:
     FAT32BootSectorPtr bootSector;
     FAT32FSInfoPtr fileSystemInfo;
     DWORD *fat;
-    DWORD partitionStart;
     DWORD FATSectorStart;
-    DWORD rootStart;
+    DWORD FATSectorSize;
+    DWORD RootDirSectorStart;
+    DWORD RootDirSectorsSize;
+    DWORD DataSectorStart;
+    DWORD DataSectorSize;
     DWORD clusterSize;
     DirEntryFatPtr rootDir;
     std::string *list;
     int numberOfEntries;
+    int numberOfLFNEntries;
     boolean knownMBR;
+    DWORD partitionStart;
 public:
     FAT32(char *filename, boolean knownMBR);
     virtual ~FAT32();
@@ -32,7 +37,7 @@ protected:
     DWORD clusterToOffset(DWORD cluster);
     char *extractLongFileName(char *name,int size);
     char *extractShortFileName(char *name,int size);
-    char *getAttrString(char *attrs, int size, DirEntryFatPtr entry);
+    char *getAttrString(DirEntryFatPtr entry);
     char *getModifiedTime(char *buffer, int size, DirEntryFatPtr entry);
     char *getModifiedDate(char *buffer, int size, DirEntryFatPtr entry);
     void dumpDirEntry(DirEntryFatPtr entry);

@@ -74,41 +74,43 @@ void FAT32::parse()
 
 void FAT32::parseMBR()
 {
-    io->seek(0,SEEK_SET);
-    io->read(mbr,sizeof(MBR));
+    /*
+        io->seek(0,SEEK_SET);
+        io->read(mbr,sizeof(MBR));
 
-    DWORD partitionStart = mbr->partition[0].StartLBA*512;
+        partitionStart = mbr->partition[0].StartLBA*512;
 
-    io->seek(partitionStart,SEEK_SET);
-    io->read(bootSector,sizeof(FAT32BootSector));
-    io->read(fileSystemInfo,sizeof(FAT32FSInfo));
+        io->seek(partitionStart,SEEK_SET);
+        io->read(bootSector,sizeof(FAT32BootSector));
+        io->read(fileSystemInfo,sizeof(FAT32FSInfo));
 
-    rootStart = partitionStart + getClusterByteOffset(bootSector->BPB_RootClus);
-    FATSectorStart = bootSector->bpb.BPB_RsvdSecCnt;
+        rootStart = partitionStart + getClusterByteOffset(bootSector->BPB_RootClus);
+        FATSectorStart = bootSector->bpb.BPB_RsvdSecCnt;
 
-    DWORD fatSize = (bootSector->BPB_FATSz32 * bootSector->bpb.BPB_BytsPerSec)/32;
-    fat = new DWORD[fatSize];
-    io->seek(FATSectorStart * bootSector->bpb.BPB_BytsPerSec,SEEK_SET);
-    io->read(fat, fatSize);
+        DWORD fatSize = (bootSector->BPB_FATSz32 * bootSector->bpb.BPB_BytsPerSec)/32;
+        fat = new DWORD[fatSize];
+        io->seek(FATSectorStart * bootSector->bpb.BPB_BytsPerSec,SEEK_SET);
+        io->read(fat, fatSize);
 
-    rootDir = new DirEntryFat[100];
-    memset(rootDir,0,sizeof(DirEntryFat)* 100);
+        rootDir = new DirEntryFat[100];
+        memset(rootDir,0,sizeof(DirEntryFat)* 100);
 
-    int i=0;
-    while(true)
-    {
-        io->seek(rootStart + i*32,SEEK_SET);
-        io->read(&rootDir[i], sizeof(rootDir[i]));
-        if (rootDir[i].statusName.allocationStatus==0)
+        int i=0;
+        while(true)
         {
-            break;
+            io->seek(rootStart + i*32,SEEK_SET);
+            io->read(&rootDir[i], sizeof(rootDir[i]));
+            if (rootDir[i].statusName.allocationStatus==0)
+            {
+                break;
+            }
+            i++;
+            if (i==100)
+            {
+                break;
+            }
         }
-        i++;
-        if (i==100)
-        {
-            break;
-        }
-    }
+    */
 }
 
 void FAT32::parseNoMBR()
@@ -117,32 +119,22 @@ void FAT32::parseNoMBR()
     io->read(bootSector,sizeof(FAT32BootSector));
     io->read(fileSystemInfo,sizeof(FAT32FSInfo));
 
-    rootStart = getClusterByteOffset(bootSector->BPB_RootClus);
+    partitionStart = 0;
+
     FATSectorStart = bootSector->bpb.BPB_RsvdSecCnt;
+    FATSectorSize = bootSector->BPB_FATSz32 * bootSector->bpb.BPB_NumFATs;
 
-    DWORD fatSize = (bootSector->BPB_FATSz32 * bootSector->bpb.BPB_BytsPerSec)/32;
-    fat = new DWORD[fatSize];
+    RootDirSectorStart = FATSectorStart + FATSectorSize;
+    RootDirSectorsSize = (32 * bootSector->bpb.BPB_RootEntCnt + bootSector->bpb.BPB_BytsPerSec - 1) / bootSector->bpb.BPB_BytsPerSec;
+
+    DataSectorStart = RootDirSectorStart + RootDirSectorsSize;
+    DataSectorSize = bootSector->bpb.BPB_TotSec32 - DataSectorStart;
+
+    DWORD fatSizeInBytes = bootSector->BPB_FATSz32 * bootSector->bpb.BPB_BytsPerSec;
+    fat = new DWORD[fatSizeInBytes/sizeof(DWORD)];
+
     io->seek(FATSectorStart * bootSector->bpb.BPB_BytsPerSec,SEEK_SET);
-    io->read(fat, fatSize);
-
-    rootDir = new DirEntryFat[100];
-    memset(rootDir,0,sizeof(DirEntryFat)* 100);
-
-    int i=0;
-    while(true)
-    {
-        io->seek(rootStart + i*32,SEEK_SET);
-        io->read(&rootDir[i], sizeof(rootDir[i]));
-        if (rootDir[i].statusName.allocationStatus==0)
-        {
-            break;
-        }
-        i++;
-        if (i==100)
-        {
-            break;
-        }
-    }
+    io->read(fat,fatSizeInBytes);
 }
 
 void FAT32::print()
@@ -203,7 +195,14 @@ void FAT32::print()
     printf("Free Cluster Count           %ld\n",fileSystemInfo->FSI_Free_Count);
     printf("Next Free Cluster Available  %ld\n",fileSystemInfo->FSI_Nxt_Free);
     printf("Boot Signature               0x%08X\n\n",fileSystemInfo->FSI_TrailSig);
-    printf("Root Start                   %ld\n", rootStart);
+
+    printf("Sector Type          Start\t Size\n");
+    printf("======================================================\n");
+    printf("Boot Sector       :  %5d\t%5d\n", partitionStart,1);
+    printf("Reserved Sectors  :  %5d\t%5d\n", 1,bootSector->bpb.BPB_RsvdSecCnt);
+    printf("FAT Sector        :  %5ld\t%5ld\n", FATSectorStart,FATSectorSize);
+    printf("Root Dir Sector   :  %5ld\t%5ld\n", RootDirSectorStart,RootDirSectorsSize);
+    printf("Data Sector       :  %5ld\t%5ld\n\n", DataSectorStart,DataSectorSize);
 }
 
 char *FAT32::extractLongFileName(char *name,int size)
@@ -236,9 +235,10 @@ char *FAT32::extractShortFileName(char *name,int size)
     return buffer;
 }
 
-char *FAT32::getAttrString(char *attrs, int size, DirEntryFatPtr entry)
+char *FAT32::getAttrString(DirEntryFatPtr entry)
 {
-    memset(attrs,0,size);
+    char *attrs = new char[7];
+    memset(attrs,0,7);
     attrs[0]='-';
     attrs[1]='-';
     attrs[2]='-';
@@ -251,6 +251,7 @@ char *FAT32::getAttrString(char *attrs, int size, DirEntryFatPtr entry)
     if (((entry->attrb&0x08)>>3)==1) attrs[3]='L';
     if (((entry->attrb&0x10)>>4)==1) attrs[4]='D';
     if (((entry->attrb&0x20)>>5)==1) attrs[5]='A';
+    return attrs;
 }
 
 char *FAT32::getModifiedTime(char *buffer, int size, DirEntryFatPtr entry)
@@ -299,66 +300,8 @@ void FAT32::dumpDirEntry(DirEntryFatPtr entry)
     }
     printf("\n");
 }
+
 void FAT32::printRootDir()
 {
-    int i=0;
-    while(true)
-    {
-        if (rootDir[i].statusName.allocationStatus==0)
-        {
-            break;
-        }
-        if (rootDir[i].attrb!=0x0F)
-        {
-            char *name = extractShortFileName((char *)rootDir[i].statusName.name,8);
-            char *ext = extractShortFileName((char *)rootDir[i].ext,3);
-            char shortname[12];
-            char attrs[7];
-            char buffer1[10];
-            char buffer2[10];
-            memset(shortname,0,sizeof(shortname));
-            sprintf(shortname,"%s.%s",name,ext);
-            char *attr = getAttrString(attrs, sizeof(attrs), &rootDir[i]);
-            char *mtime = getModifiedTime(buffer1,sizeof(buffer1),&rootDir[i]);
-            char *mdate = getModifiedDate(buffer2,sizeof(buffer2),&rootDir[i]);
-            std::string lname="";
-            if (list!=NULL)
-            {
-                lname=list[0];
-                for (int i=1; i<numberOfEntries; i++)
-                {
-                    lname.append(list[i]);
-                }
-            }
-            printf("%02X %s %s %s % 8ld % 8ld % 8ld % -15s %.*s\n", rootDir[i].statusName.allocationStatus, mdate, mtime, attrs, rootDir[i].type.fat32.strtclst32,rootDir[i].strtclst,rootDir[i].filesize,shortname,256,lname.c_str());
-            if (list!=NULL)
-            {
-                delete[] list;
-                list = NULL;
-                numberOfEntries=0;
-            }
-        }
-        else
-        {
-            LongDirEntryFatPtr entry2 = (LongDirEntryFatPtr)&rootDir[i];
-            char *name0 = extractLongFileName((char *)entry2->name0,10);
-            char *name1 = extractLongFileName((char *)entry2->name1,12);
-            char *name2 = extractLongFileName((char *)entry2->name2,4);
-            char longname[30];
-            memset(longname,0,sizeof(longname));
-            sprintf(longname,"%s%s%s",name0,name1,name2);
-            //printf("LFN ==> '%.*s'\n",30,longname);
-            if (entry2->sequ_flags>0x40)
-            {
-                numberOfEntries = entry2->sequ_flags-0x40;
-                list=new std::string[numberOfEntries];
-                list[numberOfEntries-1]=longname;
-            }
-            else
-            {
-                list[entry2->sequ_flags-1]=longname;
-            }
-        }
-        i++;
-    }
 }
+

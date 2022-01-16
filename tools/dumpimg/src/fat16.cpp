@@ -63,6 +63,10 @@ void FAT16::parseMBR()
     RootSectorStart = FATSectorStart + bootSector->bpb.BPB_NumFATs * bootSector->bpb.BPB_FATSz16;
     DataSectorStart = RootSectorStart + ((bootSector->bpb.BPB_RootEntCnt * 32)/bootSector->bpb.BPB_BytsPerSec);
 
+    FATSectorSize = RootSectorStart - FATSectorStart;
+    RootSectorSize = DataSectorStart - RootSectorStart;
+    DataSectorSize = bootSector->bpb.BPB_TotSec16 - DataSectorStart;
+
     DWORD fatSize = bootSector->bpb.BPB_FATSz16 * bootSector->bpb.BPB_BytsPerSec;
     fat = new WORD[fatSize];
     io->seek(FATSectorStart * bootSector->bpb.BPB_BytsPerSec,SEEK_SET);
@@ -83,6 +87,8 @@ void FAT16::parseMBR()
         }
         i++;
     }
+
+    numberOfEntries = i;
 }
 
 void FAT16::parseNoMBR()
@@ -97,6 +103,10 @@ void FAT16::parseNoMBR()
     FATSectorStart  = partitionStart + bootSector->bpb.BPB_RsvdSecCnt;
     RootSectorStart = FATSectorStart + bootSector->bpb.BPB_NumFATs * bootSector->bpb.BPB_FATSz16;
     DataSectorStart = RootSectorStart + ((bootSector->bpb.BPB_RootEntCnt * 32)/bootSector->bpb.BPB_BytsPerSec);
+
+    FATSectorSize = RootSectorStart - FATSectorStart;
+    RootSectorSize = DataSectorStart - RootSectorStart;
+    DataSectorSize = bootSector->bpb.BPB_TotSec32 - DataSectorStart;
 
     DWORD fatSize = bootSector->bpb.BPB_FATSz16 * bootSector->bpb.BPB_BytsPerSec;
     fat = new WORD[fatSize];
@@ -117,6 +127,8 @@ void FAT16::parseNoMBR()
         }
         i++;
     }
+
+    numberOfEntries = i;
 }
 
 void FAT16::print()
@@ -165,14 +177,16 @@ void FAT16::print()
     printf("Label                   '%.*s'\n",11, bootSector->BS_VolLab);
     printf("System ID               '%.*s'\n",8,bootSector->BS_FilSysType);
     printf("Boot Signature          0x%04X\n\n",bootSector->bootSignature);
-    printf("BS: %d FAT addr: %d Root addr: %d Data addr: %d\n", partitionStart, FATSectorStart, RootSectorStart, DataSectorStart);
-    printf("FAT entry %d ==> FAT entry %d\n",20,this->getNextCluster(20));
-    DWORD offset = getClusterSectorOffset(20)*bootSector->bpb.BPB_BytsPerSec;
-    BYTE buffer[50];
-    memset(buffer,0,sizeof(buffer));
-    io->seek(offset,SEEK_SET);
-    io->read(buffer,sizeof(buffer)-1);
-    printf("Buffer:               '%.*s'\n",49, buffer);
+
+    printf("Sector Type         Start\tSize\n");
+    printf("======================================================\n");
+    printf("Boot Sector       :  %4d\t%4d\n", partitionStart,bootSector->bpb.BPB_RsvdSecCnt);
+    printf("FAT Sector        :  %4ld\t%4ld\n", FATSectorStart,FATSectorSize);
+    printf("Root Dir Sector   :  %4ld\t%4ld\n", RootSectorStart,RootSectorSize);
+    printf("Data Sector       :  %4ld\t%4ld\n", DataSectorStart,DataSectorSize);
+
+    printf("\n");
+    printf("Number of root entries: %d\n",numberOfEntries);
 }
 
 char *FAT16::extractLongFileName(char *name,int size)
@@ -205,9 +219,10 @@ char *FAT16::extractShortFileName(char *name,int size)
     return buffer;
 }
 
-char *FAT16::getAttrString(char *attrs, int size, DirEntryFatPtr entry)
+char *FAT16::getAttrString(DirEntryFatPtr entry)
 {
-    memset(attrs,0,size);
+    char *attrs = new char[7];
+    memset(attrs,0,7);
     attrs[0]='-';
     attrs[1]='-';
     attrs[2]='-';
@@ -220,6 +235,7 @@ char *FAT16::getAttrString(char *attrs, int size, DirEntryFatPtr entry)
     if (((entry->attrb&0x08)>>3)==1) attrs[3]='L';
     if (((entry->attrb&0x10)>>4)==1) attrs[4]='D';
     if (((entry->attrb&0x20)>>5)==1) attrs[5]='A';
+    return attrs;
 }
 
 char *FAT16::getModifiedTime(char *buffer, int size, DirEntryFatPtr entry)
@@ -238,12 +254,9 @@ char *FAT16::getModifiedDate(char *buffer, int size, DirEntryFatPtr entry)
 
 void FAT16::printRootDir()
 {
-    for(int i=0; i<bootSector->bpb.BPB_RootEntCnt; i++)
+    printf("\nDate       Time     Attr    Size     Cluster SFN         LFN\n");
+    for(int i=0; i<numberOfEntries; i++)
     {
-        if (rootDir[i].statusName.allocationStatus==0)
-        {
-            break;
-        }
         if (rootDir[i].attrb==ATTR_LONG_FILE_NAME)
         {
             LongDirEntryFatPtr lfn = (LongDirEntryFatPtr)&rootDir[i];
@@ -255,9 +268,9 @@ void FAT16::printRootDir()
             sprintf(longname,"%s%s%s",name0,name1,name2);
             if (lfn->sequ_flags>0x40)
             {
-                numberOfEntries = lfn->sequ_flags-0x40;
-                list=new std::string[numberOfEntries];
-                list[numberOfEntries-1]=longname;
+                numberOfLFNEntries = lfn->sequ_flags-0x40;
+                list = new std::string[numberOfLFNEntries];
+                list[numberOfLFNEntries-1]=longname;
             }
             else
             {
@@ -267,33 +280,34 @@ void FAT16::printRootDir()
         else
         {
             char shortname[12];
-            char attrs[7];
-            char buffer1[10];
-            char buffer2[10];
+            char buffer1[12];
+            char buffer2[12];
 
             memset(shortname,0,sizeof(shortname));
+            memset(buffer1,0,sizeof(buffer1));
+            memset(buffer2,0,sizeof(buffer2));
 
             char *name = extractShortFileName((char *)rootDir[i].statusName.name,8);
             char *ext = extractShortFileName((char *)rootDir[i].ext,3);
-            char *attr = getAttrString((char *)attrs, sizeof(attrs), &rootDir[i]);
+            char *attr = getAttrString(&rootDir[i]);
             char *mtime = getModifiedTime((char *)buffer1,sizeof(buffer1),&rootDir[i]);
             char *mdate = getModifiedDate((char *)buffer2,sizeof(buffer2),&rootDir[i]);
-
             sprintf(shortname,"%s.%s",name,ext);
+            std::string lname;
             if (list!=NULL)
             {
-                std::string lname=list[0];
-                for (int i=1; i<numberOfEntries; i++)
+                lname=list[0];
+                for (int i=1; i<numberOfLFNEntries; i++)
                 {
                     lname.append(list[i]);
                 }
-                printf("%s %s %s % 8d % 8d % -11s %.*s\n", mdate, mtime, attrs,rootDir[i].filesize, rootDir[i].strtclst, shortname,256,lname.c_str());
             }
+            printf("%.*s %.*s %.*s % -8d % -8d % -11s %.*s\n", 10, mdate, 8, mtime, 6, attr, rootDir[i].filesize, rootDir[i].strtclst, shortname,256,lname.c_str());
             if (list!=NULL)
             {
                 delete[] list;
                 list = NULL;
-                numberOfEntries=0;
+                numberOfLFNEntries=0;
             }
         }
     }

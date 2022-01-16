@@ -20,7 +20,7 @@
 
 1627587374 c:\projects\skynet\tools\dumpimg\src\fatfilesystem.h
 
-1628106154 source:c:\projects\skynet\tools\dumpimg\src\fat16.cpp
+1642291906 source:c:\projects\skynet\tools\dumpimg\src\fat16.cpp
 	<windows.h>
 	<sys/stat.h>
 	<sys/types.h>
@@ -32,18 +32,18 @@
 	<stdint.h>
 	"fat16.h"
 
-1628008448 c:\projects\skynet\tools\dumpimg\src\fat16.h
+1642287515 c:\projects\skynet\tools\dumpimg\src\fat16.h
 	<string>
 	"file.h"
 	"fat.h"
 	"FATFileSystem.h"
 
-1628104840 c:\projects\skynet\tools\dumpimg\src\fat.h
+1642361495 c:\projects\skynet\tools\dumpimg\src\fat.h
 	"FatData.h"
 
 1627923788 c:\projects\skynet\tools\dumpimg\src\fatdata.h
 
-1628106112 source:c:\projects\skynet\tools\dumpimg\src\fat32.cpp
+1642363717 source:c:\projects\skynet\tools\dumpimg\src\fat32.cpp
 	<windows.h>
 	<sys/stat.h>
 	<sys/types.h>
@@ -55,7 +55,7 @@
 	<stdint.h>
 	"fat32.h"
 
-1628010000 c:\projects\skynet\tools\dumpimg\src\fat32.h
+1642363327 c:\projects\skynet\tools\dumpimg\src\fat32.h
 	<string>
 	"file.h"
 	"fat.h"
@@ -75,7 +75,7 @@
 	<cstdint>
 	"file.h"
 
-1642266139 source:c:\projects\skynet\tools\dumpimg\src\filesystem.cpp
+1642274878 source:c:\projects\skynet\tools\dumpimg\src\filesystem.cpp
 	<time.h>
 	<sys/time.h>
 	<sys/timeb.h>
@@ -100,13 +100,25 @@
 	"FatData.h"
 	"Fat.h"
 
-1642273828 c:\projects\skynet\tools\dumpimg\src\fat12.h
+1642277296 c:\projects\skynet\tools\dumpimg\src\fat12.h
 	<string>
 	"file.h"
 	"fat.h"
 	"FATFileSystem.h"
 
-1642263914 source:c:\projects\skynet\tools\dumpimg\src\main.cpp
+1642291955 source:c:\projects\skynet\tools\dumpimg\src\main.cpp
 	"filesystem.h"
 	"FatData.h"
+
+1642277945 source:c:\projects\skynet\tools\dumpimg\src\fat12.cpp
+	<windows.h>
+	<sys/stat.h>
+	<sys/types.h>
+	<string.h>
+	<errno.h>
+	<stdio.h>
+	<stdlib.h>
+	<stdbool.h>
+	<stdint.h>
+	"fat12.h"
 
