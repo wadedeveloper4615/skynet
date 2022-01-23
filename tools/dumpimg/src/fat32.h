@@ -25,6 +25,7 @@ private:
     int numberOfLFNEntries;
     boolean knownMBR;
     DWORD partitionStart;
+    DWORD partitionSize;
 public:
     FAT32(char *filename, boolean knownMBR);
     virtual ~FAT32();
