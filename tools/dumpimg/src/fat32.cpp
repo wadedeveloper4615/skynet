@@ -38,11 +38,6 @@ FAT32::~FAT32()
     delete io;
 }
 
-DWORD FAT32::getNextCluster(DWORD cluster)
-{
-    return fat[cluster];
-}
-
 DWORD FAT32::getClusterSectorOffset(DWORD cluster)
 {
     int16_t BPB_BytesPerSec = bootSector->bpb.BPB_BytsPerSec;
@@ -58,6 +53,26 @@ DWORD FAT32::getClusterSectorOffset(DWORD cluster)
 DWORD FAT32::getClusterByteOffset(DWORD cluster)
 {
     return getClusterSectorOffset(cluster)*bootSector->bpb.BPB_BytsPerSec;
+}
+
+DWORD FAT32::getNextCluster(DWORD cluster)
+{
+    DWORD newclust = fat[cluster];
+    if (newclust >= FAT32_FAT_BAD) newclust = FAT32_FAT_LAST;
+    return newclust;
+}
+
+DWORD FAT32::getRootDirSizeinClusters()
+{
+    DWORD root_size = 0;
+    DWORD clust = bootSector->BPB_RootClus;
+    do
+    {
+        root_size++;
+        clust = getNextCluster(clust);
+    }
+    while(clust<FAT32_FAT_LAST);
+    return root_size;
 }
 
 void FAT32::parse()
@@ -96,11 +111,15 @@ void FAT32::parseMBR()
     DWORD fatSizeInBytes = bootSector->BPB_FATSz32 * bootSector->bpb.BPB_BytsPerSec;
     fat = new DWORD[fatSizeInBytes/sizeof(DWORD)];
 
-    io->seek(FATSectorStart * bootSector->bpb.BPB_BytsPerSec,SEEK_SET);
+    io->seek(partitionStart + FATSectorStart * bootSector->bpb.BPB_BytsPerSec,SEEK_SET);
     io->read(fat,fatSizeInBytes);
 
-    rootDir = new DirEntryFat[100];
-    memset(rootDir,0,sizeof(DirEntryFat)* 100);
+    root_size = getRootDirSizeinClusters();
+
+    DWORD numberOfRootEntries = root_size*bootSector->bpb.BPB_SecPerClus*bootSector->bpb.BPB_BytsPerSec/sizeof(DirEntryFat);
+
+    rootDir = new DirEntryFat[numberOfRootEntries];
+    memset(rootDir,0,sizeof(DirEntryFat)* numberOfRootEntries);
 
     DWORD rootStart = partitionStart + RootDirSectorStart*bootSector->bpb.BPB_BytsPerSec;
 
@@ -115,7 +134,7 @@ void FAT32::parseMBR()
             break;
         }
         i++;
-        if (i==100)
+        if (i==numberOfRootEntries)
         {
             break;
         }
@@ -144,11 +163,15 @@ void FAT32::parseNoMBR()
     DWORD fatSizeInBytes = bootSector->BPB_FATSz32 * bootSector->bpb.BPB_BytsPerSec;
     fat = new DWORD[fatSizeInBytes/sizeof(DWORD)];
 
-    io->seek(FATSectorStart * bootSector->bpb.BPB_BytsPerSec,SEEK_SET);
+    io->seek(partitionStart + FATSectorStart * bootSector->bpb.BPB_BytsPerSec,SEEK_SET);
     io->read(fat,fatSizeInBytes);
 
-    rootDir = new DirEntryFat[100];
-    memset(rootDir,0,sizeof(DirEntryFat)* 100);
+    root_size = getRootDirSizeinClusters();
+
+    DWORD numberOfRootEntries = root_size*bootSector->bpb.BPB_SecPerClus*bootSector->bpb.BPB_BytsPerSec/sizeof(DirEntryFat);
+
+    rootDir = new DirEntryFat[numberOfRootEntries];
+    memset(rootDir,0,sizeof(DirEntryFat)* numberOfRootEntries);
 
     DWORD rootStart = partitionStart + RootDirSectorStart*bootSector->bpb.BPB_BytsPerSec;
 
@@ -163,7 +186,7 @@ void FAT32::parseNoMBR()
             break;
         }
         i++;
-        if (i==100)
+        if (i==numberOfRootEntries)
         {
             break;
         }
@@ -230,6 +253,8 @@ void FAT32::print()
     printf("Free Space                   %ld\n",fileSystemInfo->FSI_Free_Count*bootSector->bpb.BPB_SecPerClus*bootSector->bpb.BPB_BytsPerSec);
     printf("Next Free Cluster Available  %ld\n",fileSystemInfo->FSI_Nxt_Free);
     printf("Boot Signature               0x%08X\n\n",fileSystemInfo->FSI_TrailSig);
+
+    printf("Root Size in bytes           %ld\n\n",root_size*bootSector->bpb.BPB_SecPerClus*bootSector->bpb.BPB_BytsPerSec);
 
     printf("Sector Type          Start\t Size\n");
     printf("======================================================\n");

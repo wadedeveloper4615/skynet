@@ -5,6 +5,9 @@
 #include "fat.h"
 #include "FATFileSystem.h"
 
+#define FAT32_FAT_BAD    0x0FFFFFF7
+#define FAT32_FAT_LAST   0x0FFFFFFF
+
 class FAT32 : public FATFileSystem
 {
 private:
@@ -26,6 +29,7 @@ private:
     boolean knownMBR;
     DWORD partitionStart;
     DWORD partitionSize;
+    DWORD root_size;
 public:
     FAT32(char *filename, boolean knownMBR);
     virtual ~FAT32();
@@ -42,9 +46,10 @@ protected:
     char *getModifiedTime(char *buffer, int size, DirEntryFatPtr entry);
     char *getModifiedDate(char *buffer, int size, DirEntryFatPtr entry);
     void dumpDirEntry(DirEntryFatPtr entry);
-    DWORD getNextCluster(DWORD cluster);
     DWORD getClusterSectorOffset(DWORD cluster);
     DWORD getClusterByteOffset(DWORD cluster);
+    DWORD getNextCluster(DWORD cluster);
+    DWORD getRootDirSizeinClusters();
 };
 
 #endif // FAT32_H_INCLUDED
