@@ -123,23 +123,6 @@ int FileSystem::DetectMBR(MBRPtr mbr)
     return mbr->partition[0].type==0x04 || mbr->partition[0].type==0x0B;
 }
 
-FSType FileSystem::DetectExFat(EXFATBootSectorPtr vbr)
-{
-    if ((vbr->jmp[0] != 0xEB) || (vbr->jmp[1] != 0x76) || (vbr->jmp[2] != 0x90))
-        return FS_UNKNOWN;
-    if (!(vbr->version.major == 0x01 && vbr->version.minor == 0x00))
-        return FS_UNKNOWN;
-    if ((vbr->sector_bits > 12) || ((vbr->sector_bits + vbr->spc_bits) > 25))
-        return FS_UNKNOWN;
-    if ((vbr->fat_count < 1) || (vbr->fat_count > 2))
-        return FS_UNKNOWN;
-    if (vbr->allocated_percent > 100)
-        return FS_UNKNOWN;
-    if (vbr->volume_state & (1<<3))
-        return FS_UNKNOWN;
-    return FS_EXFAT;
-}
-
 void FileSystem::parse()
 {
     BYTE *buffer = new BYTE[65*MAX_SECT_SIZE];
@@ -150,18 +133,10 @@ void FileSystem::parse()
     {
         MBRPtr mbr = (MBRPtr)buffer;
         result = DetectFat((FAT1216BootSectorPtr)(buffer+mbr->partition[0].StartLBA*512));
-        if (result==FS_UNKNOWN)
-        {
-            result = DetectExFat((EXFATBootSectorPtr)(buffer+mbr->partition[0].StartLBA*512));
-        }
     }
     else
     {
         result = DetectFat((FAT1216BootSectorPtr)buffer);
-        if (result==FS_UNKNOWN)
-        {
-            result = DetectExFat((EXFATBootSectorPtr)buffer);
-        }
     }
     switch(result)
     {
@@ -171,13 +146,6 @@ void FileSystem::parse()
             printf("Unknown file system with MBR\n");
         else
             printf("Unknown file system with no MBR\n");
-        break;
-    case FS_EXFAT:
-        fs = new ExFat(filename);
-        if (mbrExist)
-            printf("ExFat file system with MBR\n");
-        else
-            printf("EXFat file system with no MBR\n");
         break;
     case FS_FAT12:
         fs = new FAT12(filename);

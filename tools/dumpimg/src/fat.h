@@ -1,6 +1,7 @@
 #ifndef FAT1216_H_INCLUDED
 #define FAT1216_H_INCLUDED
 
+#include "types.h"
 #include "FatData.h"
 
 typedef enum _AttributeFat
@@ -17,12 +18,12 @@ typedef enum _AttributeFat
 #pragma pack(push, 1)
 struct msdos_volume_info
 {
-    uint8_t drive_number;	/* BIOS drive number */
-    uint8_t boot_flags;		/* bit 0: dirty, bit 1: need surface test */
-    uint8_t ext_boot_sign;	/* 0x29 if fields below exist (DOS 3.3+) */
-    uint8_t volume_id[4];	/* Volume ID number */
-    uint8_t volume_label[11];	/* Volume label */
-    uint8_t fs_type[8];		/* Typically FAT12 or FAT16 */
+    uint8_t drive_number;	  /* BIOS drive number */
+    uint8_t boot_flags;		  /* bit 0: dirty, bit 1: need surface test */
+    uint8_t ext_boot_sign;	  /* 0x29 if fields below exist (DOS 3.3+) */
+    uint8_t volume_id[4];	  /* Volume ID number */
+    uint8_t volume_label[11]; /* Volume label */
+    uint8_t fs_type[8];		  /* Typically FAT12 or FAT16 */
 };
 
 struct msdos_boot_sector

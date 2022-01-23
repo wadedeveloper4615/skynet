@@ -26,10 +26,9 @@
 
 typedef enum _FSType{
  FS_UNKNOWN = -1,
- FS_EXFAT   = 1,
- FS_FAT12   = 2,
- FS_FAT16   = 3,
- FS_FAT32   = 4
+ FS_FAT12   = 1,
+ FS_FAT16   = 2,
+ FS_FAT32   = 3
 }FSType;
 
 typedef enum _DeviceType
@@ -71,7 +70,6 @@ protected:
     FSType DetectFatSize(FAT1216BootSectorPtr bpb);
     FSType DetectFat(FAT1216BootSectorPtr bpb);
     int DetectMBR(MBRPtr mbr);
-    FSType DetectExFat(EXFATBootSectorPtr vbr);
 };
 
 #endif // FILESYSTEM_H
