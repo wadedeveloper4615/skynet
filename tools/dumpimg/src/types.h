@@ -9,6 +9,7 @@ typedef   signed  long       int32s;
 typedef unsigned  long       int32u;
 typedef   signed  long long  int64s;
 typedef unsigned  long long  int64u;
+typedef unsigned  char       boolean;
 
 #define BOOTCODE_SIZE		          448
 #define BOOTCODE_FAT32_SIZE	          420

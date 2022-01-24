@@ -46,12 +46,12 @@ FileSystem::~FileSystem()
     delete io;
 }
 
-BOOL FileSystem::power_of_two(DWORD val)
+boolean FileSystem::power_of_two(int32u val)
 {
     return ((val > 1) && ((val & (val - 1)) == 0));
 }
 
-const BYTE media[11] = { 0x00, 0x01, 0xF0, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF };
+const int8u media[11] = { 0x00, 0x01, 0xF0, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF };
 
 FSType FileSystem::DetectFatSize(FAT1216BootSectorPtr bpb)
 {
@@ -98,7 +98,7 @@ FSType FileSystem::DetectFatSize(FAT1216BootSectorPtr bpb)
 FSType FileSystem::DetectFat(FAT1216BootSectorPtr bpb)
 {
     if (!(((bpb->bpb.BS_jmpBoot[0] == 0xEB) && (bpb->bpb.BS_jmpBoot[2] == 0x90)) ||
-            ((bpb->bpb.BS_jmpBoot[0] == 0xE9) && ((*(WORD *) &bpb->bpb.BS_jmpBoot[1]) < 0x1FE))))
+            ((bpb->bpb.BS_jmpBoot[0] == 0xE9) && ((*(int16u *) &bpb->bpb.BS_jmpBoot[1]) < 0x1FE))))
         return FS_UNKNOWN;
     if ((bpb->bpb.BPB_BytsPerSec < 128) || (bpb->bpb.BPB_BytsPerSec > 4096) || !power_of_two(bpb->bpb.BPB_BytsPerSec))
         return FS_UNKNOWN;
@@ -125,7 +125,7 @@ int FileSystem::DetectMBR(MBRPtr mbr)
 
 void FileSystem::parse()
 {
-    BYTE *buffer = new BYTE[65*MAX_SECT_SIZE];
+    int8u *buffer = new int8u[65*MAX_SECT_SIZE];
     io->read(buffer,0,65*MAX_SECT_SIZE);
     boolean mbrExist = DetectMBR((MBRPtr)buffer);
     FSType result;

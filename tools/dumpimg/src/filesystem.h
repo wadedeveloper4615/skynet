@@ -14,13 +14,11 @@
 #include "fat12.h"
 #include "fat16.h"
 #include "fat32.h"
-#include "exfat.h"
-
 #include "FatData.h"
 #include "Fat.h"
+#include "types.h"
 
 #define MAX_SECT_SIZE   4096
-
 #define DEFAULT_SECTOR_SIZE       512
 #define BLOCK_SIZE         1024
 
@@ -41,19 +39,6 @@ typedef enum _DeviceType
     TYPE_FIXED      /* fixed disk device */
 }DeviceType;
 
-typedef struct _DeviceInfo
-{
-    DeviceType type;
-    int partition;
-    int has_children;
-    int geom_heads;
-    int geom_sectors;
-    long long geom_start;
-    long long geom_size;
-    int sector_size;
-    long long size;
-} DeviceInfo,*DeviceInfoPtr;
-
 class FileSystem
 {
 private:
@@ -66,7 +51,7 @@ public:
     void parse();
 public:
 protected:
-    BOOL power_of_two(DWORD val);
+    boolean power_of_two(int32u val);
     FSType DetectFatSize(FAT1216BootSectorPtr bpb);
     FSType DetectFat(FAT1216BootSectorPtr bpb);
     int DetectMBR(MBRPtr mbr);

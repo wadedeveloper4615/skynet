@@ -14,22 +14,22 @@ private:
     MBR *mbr;
     FAT32BootSectorPtr bootSector;
     FAT32FSInfoPtr fileSystemInfo;
-    DWORD *fat;
-    DWORD FATSectorStart;
-    DWORD FATSectorSize;
-    DWORD RootDirSectorStart;
-    DWORD RootDirSectorsSize;
-    DWORD DataSectorStart;
-    DWORD DataSectorSize;
-    DWORD clusterSize;
+    int32u *fat;
+    int32u FATSectorStart;
+    int32u FATSectorSize;
+    int32u RootDirSectorStart;
+    int32u RootDirSectorsSize;
+    int32u DataSectorStart;
+    int32u DataSectorSize;
+    int32u clusterSize;
     DirEntryFatPtr rootDir;
     std::string *list;
-    int numberOfEntries;
-    int numberOfLFNEntries;
+    int32s numberOfEntries;
+    int32s numberOfLFNEntries;
     boolean knownMBR;
-    DWORD partitionStart;
-    DWORD partitionSize;
-    DWORD root_size;
+    int32u partitionStart;
+    int32u partitionSize;
+    int32u root_size;
 public:
     FAT32(char *filename, boolean knownMBR);
     virtual ~FAT32();
@@ -39,17 +39,17 @@ public:
 protected:
     void parseMBR();
     void parseNoMBR();
-    DWORD clusterToOffset(DWORD cluster);
-    char *extractLongFileName(char *name,int size);
-    char *extractShortFileName(char *name,int size);
+    int32u clusterToOffset(int32u cluster);
+    char *extractLongFileName(char *name,int32s size);
+    char *extractShortFileName(char *name,int32s size);
     char *getAttrString(DirEntryFatPtr entry);
-    char *getModifiedTime(char *buffer, int size, DirEntryFatPtr entry);
-    char *getModifiedDate(char *buffer, int size, DirEntryFatPtr entry);
+    char *getModifiedTime(DirEntryFatPtr entry);
+    char *getModifiedDate(DirEntryFatPtr entry);
     void dumpDirEntry(DirEntryFatPtr entry);
-    DWORD getClusterSectorOffset(DWORD cluster);
-    DWORD getClusterByteOffset(DWORD cluster);
-    DWORD getNextCluster(DWORD cluster);
-    DWORD getRootDirSizeinClusters();
+    int32u getClusterSectorOffset(int32u cluster);
+    int32u getClusterByteOffset(int32u cluster);
+    int32u getNextCluster(int32u cluster);
+    int32u getRootDirSizeinClusters();
 };
 
 #endif // FAT32_H_INCLUDED

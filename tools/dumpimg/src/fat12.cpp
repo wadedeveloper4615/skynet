@@ -120,12 +120,12 @@ void FAT12::print()
     printf("Number of root entries: %d\n",numberOfEntries);
 }
 
-char *FAT12::extractLongFileName(char *name,int size)
+char *FAT12::extractLongFileName(char *name,int32s size)
 {
     char *buffer=new char[50];
     memset(buffer,0,50);
-    int n=0;
-    for(int i=0; i<size; i++)
+    int32s n=0;
+    for(int32s i=0; i<size; i++)
     {
         if (name[i]!='\0')
         {
@@ -135,7 +135,7 @@ char *FAT12::extractLongFileName(char *name,int size)
     return buffer;
 }
 
-char *FAT12::extractShortFileName(char *name,int size)
+char *FAT12::extractShortFileName(char *name,int32s size)
 {
     char *buffer=new char[50];
     memset(buffer,0,50);
@@ -169,15 +169,19 @@ char *FAT12::getAttrString(DirEntryFatPtr entry)
     return attrs;
 }
 
-char *FAT12::getModifiedTime(char *buffer, int size, DirEntryFatPtr entry)
+char *FAT12::getModifiedTime(DirEntryFatPtr entry)
 {
+    char *buffer = new char[11];
+    memset(buffer,0,11);
     int t = entry->time;
     sprintf(buffer,"%02d:%02d:%02d", t >> 11, (t & 0x07E0) >> 5, (t & 0x001F) >> 0);
     return buffer;
 }
 
-char *FAT12::getModifiedDate(char *buffer, int size, DirEntryFatPtr entry)
+char *FAT12::getModifiedDate(DirEntryFatPtr entry)
 {
+    char *buffer = new char[11];
+    memset(buffer,0,11);
     int d = entry->date;
     sprintf(buffer,"%02d/%02d/%04d", (d & 0x01E0) >> 5, (d & 0x001F) >> 0,(d >> 9) + 1980);
     return buffer;
@@ -211,18 +215,13 @@ void FAT12::printRootDir()
         else
         {
             char shortname[12];
-            char buffer1[12];
-            char buffer2[12];
-
             memset(shortname,0,sizeof(shortname));
-            memset(buffer1,0,sizeof(buffer1));
-            memset(buffer2,0,sizeof(buffer2));
 
             char *name = extractShortFileName((char *)rootDir[i].statusName.name,8);
             char *ext = extractShortFileName((char *)rootDir[i].ext,3);
             char *attr = getAttrString(&rootDir[i]);
-            char *mtime = getModifiedTime((char *)buffer1,sizeof(buffer1),&rootDir[i]);
-            char *mdate = getModifiedDate((char *)buffer2,sizeof(buffer2),&rootDir[i]);
+            char *mtime = getModifiedTime(&rootDir[i]);
+            char *mdate = getModifiedDate(&rootDir[i]);
             sprintf(shortname,"%s.%s",name,ext);
             std::string lname;
             if (list!=NULL)

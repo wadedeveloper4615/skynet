@@ -266,7 +266,7 @@ void FAT32::print()
     printf("Data Sector       :  %8ld\t%8ld\n\n", DataSectorStart,DataSectorSize);
 }
 
-char *FAT32::extractLongFileName(char *name,int size)
+char *FAT32::extractLongFileName(char *name,int32s size)
 {
     char *buffer=new char[50];
     memset(buffer,0,50);
@@ -281,7 +281,7 @@ char *FAT32::extractLongFileName(char *name,int size)
     return buffer;
 }
 
-char *FAT32::extractShortFileName(char *name,int size)
+char *FAT32::extractShortFileName(char *name,int32s size)
 {
     char *buffer=new char[50];
     memset(buffer,0,50);
@@ -315,20 +315,23 @@ char *FAT32::getAttrString(DirEntryFatPtr entry)
     return attrs;
 }
 
-char *FAT32::getModifiedTime(char *buffer, int size, DirEntryFatPtr entry)
+char *FAT32::getModifiedTime(DirEntryFatPtr entry)
 {
+    char *buffer = new char[10];
+    memset(buffer,0,10);
     int t = entry->time;
     sprintf(buffer,"%02d:%02d:%02d", t >> 11, (t & 0x07E0) >> 5, (t & 0x001F) >> 0);
     return buffer;
 }
 
-char *FAT32::getModifiedDate(char *buffer, int size, DirEntryFatPtr entry)
+char *FAT32::getModifiedDate(DirEntryFatPtr entry)
 {
+    char *buffer = new char[10];
+    memset(buffer,0,10);
     int d = entry->date;
     sprintf(buffer,"%02d/%02d/%02d", (d & 0x01E0) >> 5, (d & 0x001F) >> 0,(d >> 9) + 1980);
     return buffer;
 }
-
 
 void FAT32::dumpDirEntry(DirEntryFatPtr entry)
 {
@@ -400,8 +403,8 @@ void FAT32::printRootDir()
             char *name = extractShortFileName((char *)rootDir[i].statusName.name,8);
             char *ext = extractShortFileName((char *)rootDir[i].ext,3);
             char *attr = getAttrString(&rootDir[i]);
-            char *mtime = getModifiedTime((char *)buffer1,sizeof(buffer1),&rootDir[i]);
-            char *mdate = getModifiedDate((char *)buffer2,sizeof(buffer2),&rootDir[i]);
+            char *mtime = getModifiedTime(&rootDir[i]);
+            char *mdate = getModifiedDate(&rootDir[i]);
             sprintf(shortname,"%s.%s",name,ext);
             std::string lname;
             if (list!=NULL)
