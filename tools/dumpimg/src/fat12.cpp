@@ -113,11 +113,19 @@ void FAT12::print()
     printf("======================================================\n");
     printf("Boot Sector       :  %4d\t%4d\n", 0,1);
     printf("FAT Sector        :  %4ld\t%4ld\n", FATSectorStart,FATSectorSize);
-    printf("Root Dir Sector   :  %4ld\t%4ld\n", RootSectorStart,RootSectorSize);
+    printf("Root Dir Sectors  :  %4ld\t%4ld\n", RootSectorStart,RootSectorSize);
     printf("Data Sector       :  %4ld\t%4ld\n", DataSectorStart,DataSectorSize);
 
     printf("\n");
-    printf("Number of root entries: %d\n",numberOfEntries);
+    int32u fatSize = bootSector->bpb.BPB_BytsPerSec*bootSector->bpb.BPB_FATSz16;
+    int32u numEntries = (bootSector->bpb.BPB_BytsPerSec*bootSector->bpb.BPB_FATSz16)/1.5;
+    int32u driveSize = bootSector->bpb.BPB_TotSec16 * bootSector->bpb.BPB_BytsPerSec;
+    int32u rootDirSize = (bootSector->bpb.BPB_RootEntCnt*32)/bootSector->bpb.BPB_BytsPerSec;
+    printf("Number of root sectors    : %d\n",numberOfEntries);
+    printf("Size of FAT in bytes      : %ld\n",fatSize);
+    printf("Max Num Of Entries in FAT : %ld\n",numEntries);
+    printf("Drive Size                : %ld\n",driveSize);
+    printf("Root Size in Sectors      : %ld\n",rootDirSize);
 }
 
 char *FAT12::extractLongFileName(char *name,int32s size)
