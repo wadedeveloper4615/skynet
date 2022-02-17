@@ -9,7 +9,8 @@ void parseFileSystem(char *filename){
 int main()
 {
     //parseFileSystem("C:\\projects\\skynet\\tools\\dumpimg\\images\\floppy.img");
-    parseFileSystem("C:\\projects\\skynet\\tools\\dumpimg\\images\\a.img");
+    //parseFileSystem("C:\\projects\\skynet\\tools\\dumpimg\\images\\a.img");
+    parseFileSystem("C:\\projects\\imgtest\\fat12_2.img");
     //parseFileSystem("C:\\projects\\skynet\\tools\\dumpimg\\images\\fat16NoMbr.img");
     //parseFileSystem("C:\\projects\\skynet\\tools\\dumpimg\\images\\fat16Mbr.img");
     //parseFileSystem("C:\\projects\\skynet\\tools\\dumpimg\\images\\fat32NoMbr.img");

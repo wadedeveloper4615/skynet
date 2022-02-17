@@ -121,11 +121,11 @@ void FAT12::print()
     int32u numEntries = (bootSector->bpb.BPB_BytsPerSec*bootSector->bpb.BPB_FATSz16)/1.5;
     int32u driveSize = bootSector->bpb.BPB_TotSec16 * bootSector->bpb.BPB_BytsPerSec;
     int32u rootDirSize = (bootSector->bpb.BPB_RootEntCnt*32)/bootSector->bpb.BPB_BytsPerSec;
-    printf("Number of root sectors    : %d\n",numberOfEntries);
-    printf("Size of FAT in bytes      : %ld\n",fatSize);
-    printf("Max Num Of Entries in FAT : %ld\n",numEntries);
-    printf("Drive Size                : %ld\n",driveSize);
-    printf("Root Size in Sectors      : %ld\n",rootDirSize);
+    printf("Number of root sector entries : %d\n",numberOfEntries);
+    printf("Size of FAT in bytes          : %ld\n",fatSize);
+    printf("Max Num Of Entries in FAT     : %ld\n",numEntries);
+    printf("Drive Size                    : %ld\n",driveSize);
+    printf("Root Size in Sectors          : %ld\n",rootDirSize);
 }
 
 char *FAT12::extractLongFileName(char *name,int32s size)
