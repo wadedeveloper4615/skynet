@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <getopt.h>
+#include <iconv.h>
 
 #include "endian.h"
 #include "version.h"

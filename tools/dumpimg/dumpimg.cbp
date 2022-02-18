@@ -53,21 +53,21 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
-		<Unit filename="src/FATFileSystem.h" />
-		<Unit filename="src/FatData.h" />
-		<Unit filename="src/fat.h" />
-		<Unit filename="src/fat12.cpp" />
-		<Unit filename="src/fat12.h" />
-		<Unit filename="src/fat16.cpp" />
-		<Unit filename="src/fat16.h" />
-		<Unit filename="src/fat32.cpp" />
-		<Unit filename="src/fat32.h" />
-		<Unit filename="src/file.cpp" />
-		<Unit filename="src/file.h" />
-		<Unit filename="src/filesystem.cpp" />
-		<Unit filename="src/filesystem.h" />
-		<Unit filename="src/main.cpp" />
-		<Unit filename="src/types.h" />
+		<Unit filename="FATFileSystem.h" />
+		<Unit filename="FatData.h" />
+		<Unit filename="fat.h" />
+		<Unit filename="fat12.cpp" />
+		<Unit filename="fat12.h" />
+		<Unit filename="fat16.cpp" />
+		<Unit filename="fat16.h" />
+		<Unit filename="fat32.cpp" />
+		<Unit filename="fat32.h" />
+		<Unit filename="file.cpp" />
+		<Unit filename="file.h" />
+		<Unit filename="filesystem.cpp" />
+		<Unit filename="filesystem.h" />
+		<Unit filename="main.cpp" />
+		<Unit filename="types.h" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

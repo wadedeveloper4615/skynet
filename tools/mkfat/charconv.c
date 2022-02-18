@@ -130,7 +130,6 @@ int local_string_to_cp850_string(char *out, const char *in, unsigned int out_siz
 }
 
 #ifdef HAVE_ICONV
-
 static int iconv_init_codepage(int codepage, const char *local, iconv_t *to_local, iconv_t *from_local)
 {
     char codepage_name[32];

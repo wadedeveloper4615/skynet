@@ -1,6 +1,7 @@
 #include "mkfs.h"
 
-static const struct device_info device_info_clueless = {
+static const struct device_info device_info_clueless =
+{
     .type         = TYPE_UNKNOWN,
     .partition    = -1,
     .has_children = -1,
@@ -16,7 +17,7 @@ static const struct device_info device_info_clueless = {
 int device_info_verbose;
 
 /*
-static void get_block_device_size(struct device_info *info, int fd)
+void get_block_device_size(struct device_info *info, int fd)
 {
     unsigned long long bytes;
 
@@ -25,7 +26,7 @@ static void get_block_device_size(struct device_info *info, int fd)
 }
 
 
-static void get_block_geometry(struct device_info *info, int fd, dev_t rdev)
+void get_block_geometry(struct device_info *info, int fd, dev_t rdev)
 {
     unsigned int heads, sectors;
     unsigned long long start;
@@ -79,28 +80,38 @@ static void get_block_linux_info(struct device_info *info, int devfd, dev_t rdev
 
     /* Check if device is partition */
     fd = openat(blockfd, "partition", O_RDONLY);
-    if (fd >= 0) {
+    if (fd >= 0)
+    {
         file = fdopen(fd, "r");
-        if (file) {
+        if (file)
+        {
             if (fscanf(file, "%d", &info->partition) != 1 || info->partition == 0)
                 info->partition = -1;
             fclose(file);
-        } else {
+        }
+        else
+        {
             close(fd);
         }
         /* Read total number of sectors of the disk */
         fd = openat(blockfd, "../size", O_RDONLY);
-        if (fd >= 0) {
+        if (fd >= 0)
+        {
             file = fdopen(fd, "r");
-            if (file) {
+            if (file)
+            {
                 if (fscanf(file, "%lld", &info->geom_size) != 1 || info->geom_size == 0)
                     info->geom_size = -1;
                 fclose(file);
-            } else {
+            }
+            else
+            {
                 close(fd);
             }
         }
-    } else if (errno == ENOENT && info->geom_start <= 0) {
+    }
+    else if (errno == ENOENT && info->geom_start <= 0)
+    {
         info->partition = 0;
         if (info->size > 0 && info->sector_size > 0)
             info->geom_size = info->size / info->sector_size;
@@ -108,39 +119,51 @@ static void get_block_linux_info(struct device_info *info, int devfd, dev_t rdev
 
     /* Check if device has partition subdevice and therefore has children */
     fd = dup(blockfd);
-    if (fd >= 0) {
+    if (fd >= 0)
+    {
         dir = fdopendir(fd);
-        if (dir) {
+        if (dir)
+        {
             info->has_children = 0;
             errno = 0;
-            while ((d = readdir(dir))) {
+            while ((d = readdir(dir)))
+            {
                 if (strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0)
                     continue;
                 if (d->d_type != DT_DIR && d->d_type != DT_UNKNOWN)
                     continue;
                 snprintf(path, sizeof(path), "%s/partition", d->d_name);
-                if (fstatat(blockfd, path, &st, 0) == 0) {
-                    if (S_ISREG(st.st_mode)) {
+                if (fstatat(blockfd, path, &st, 0) == 0)
+                {
+                    if (S_ISREG(st.st_mode))
+                    {
                         start = -1;
                         snprintf(path, sizeof(path), "%s/start", d->d_name);
                         fd = openat(blockfd, path, O_RDONLY);
-                        if (fd >= 0) {
+                        if (fd >= 0)
+                        {
                             file = fdopen(fd, "r");
-                            if (file) {
+                            if (file)
+                            {
                                 if (fscanf(file, "%lld", &start) != 1)
                                     start = -1;
                                 fclose(file);
-                            } else {
+                            }
+                            else
+                            {
                                 close(fd);
                             }
                         }
                         /* If subdevice starts at zero offset then it is whole device, so it is not a child */
-                        if (start != 0) {
+                        if (start != 0)
+                        {
                             info->has_children = 1;
                             break;
                         }
                     }
-                } else if (errno != ENOENT) {
+                }
+                else if (errno != ENOENT)
+                {
                     info->has_children = -1;
                 }
                 errno = 0;
@@ -148,25 +171,33 @@ static void get_block_linux_info(struct device_info *info, int devfd, dev_t rdev
             if (errno != 0 && info->has_children == 0)
                 info->has_children = -1;
             closedir(dir);
-        } else {
+        }
+        else
+        {
             close(fd);
         }
     }
 
     /* Check if device has holders and therefore has children */
-    if (info->has_children <= 0) {
+    if (info->has_children <= 0)
+    {
         fd = openat(blockfd, "holders", O_RDONLY | O_DIRECTORY);
-        if (fd >= 0) {
+        if (fd >= 0)
+        {
             dir = fdopendir(fd);
-            if (dir) {
-                while ((d = readdir(dir))) {
+            if (dir)
+            {
+                while ((d = readdir(dir)))
+                {
                     if (strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0)
                         continue;
                     info->has_children = 1;
                     break;
                 }
                 closedir(dir);
-            } else {
+            }
+            else
+            {
                 close(fd);
             }
         }
@@ -174,27 +205,33 @@ static void get_block_linux_info(struct device_info *info, int devfd, dev_t rdev
 
     /* Check if device is slave of another device and therefore is virtual */
     fd = openat(blockfd, "slaves", O_RDONLY | O_DIRECTORY);
-    if (fd >= 0) {
+    if (fd >= 0)
+    {
         dir = fdopendir(fd);
-        if (dir) {
-            while ((d = readdir(dir))) {
+        if (dir)
+        {
+            while ((d = readdir(dir)))
+            {
                 if (strcmp(d->d_name, ".") == 0 || strcmp(d->d_name, "..") == 0)
                     continue;
                 info->type = TYPE_VIRTUAL;
                 break;
             }
             closedir(dir);
-        } else {
+        }
+        else
+        {
             close(fd);
         }
     }
 
 #ifdef HAVE_LINUX_LOOP_H
     /* Check if device is loop and detect if is based from regular file or is virtual */
-    if (info->type == TYPE_UNKNOWN && info->partition == 0 && ioctl(devfd, LOOP_GET_STATUS64, &lo) == 0) {
+    if (info->type == TYPE_UNKNOWN && info->partition == 0 && ioctl(devfd, LOOP_GET_STATUS64, &lo) == 0)
+    {
         if (lo.lo_offset == 0 && lo.lo_sizelimit == 0 && lo.lo_encrypt_type == LO_CRYPT_NONE &&
-            stat((char *)lo.lo_file_name, &st) == 0 && S_ISREG(st.st_mode) &&
-            st.st_dev == lo.lo_device && st.st_ino == lo.lo_inode && st.st_size == info->size)
+                stat((char *)lo.lo_file_name, &st) == 0 && S_ISREG(st.st_mode) &&
+                st.st_dev == lo.lo_device && st.st_ino == lo.lo_inode && st.st_size == info->size)
             info->type = TYPE_FILE;
         else
             info->type = TYPE_VIRTUAL;
@@ -202,16 +239,21 @@ static void get_block_linux_info(struct device_info *info, int devfd, dev_t rdev
 #endif
 
     /* Device is neither loop nor virtual, so is either removable or fixed */
-    if (info->type == TYPE_UNKNOWN) {
+    if (info->type == TYPE_UNKNOWN)
+    {
         removable = 0;
         fd = openat(blockfd, "removable", O_RDONLY);
-        if (fd >= 0) {
+        if (fd >= 0)
+        {
             file = fdopen(fd, "r");
-            if (file) {
+            if (file)
+            {
                 if (fscanf(file, "%d", &removable) != 1)
                     removable = 0;
                 fclose(file);
-            } else {
+            }
+            else
+            {
                 close(fd);
             }
         }
@@ -235,23 +277,26 @@ int get_device_info(int fd, struct device_info *info)
     *info = device_info_clueless;
 
     ret = fstat(fd, &stat);
-    if (ret < 0) {
-	perror("fstat on target failed");
-	return -1;
+    if (ret < 0)
+    {
+        perror("fstat on target failed");
+        return -1;
     }
 
-    if (S_ISREG(stat.st_mode)) {
-	/* there is nothing more to discover for an image file */
-	info->type = TYPE_FILE;
-	info->partition = 0;
-	info->size = stat.st_size;
-	return 0;
+    if (S_ISREG(stat.st_mode))
+    {
+        /* there is nothing more to discover for an image file */
+        info->type = TYPE_FILE;
+        info->partition = 0;
+        info->size = stat.st_size;
+        return 0;
     }
 
-    if (!S_ISBLK(stat.st_mode)) {
-	/* neither regular file nor block device? not usable */
-	info->type = TYPE_BAD;
-	return 0;
+    if (!S_ISBLK(stat.st_mode))
+    {
+        /* neither regular file nor block device? not usable */
+        info->type = TYPE_BAD;
+        return 0;
     }
 
     //get_block_device_size(info, fd);
@@ -273,10 +318,10 @@ int is_device_mounted(const char *path)
     struct mntent *mnt;
 
     if ((f = setmntent(_PATH_MOUNTED, "r")) == NULL)
-	return 0;
+        return 0;
     while ((mnt = getmntent(f)) != NULL)
-	if (strcmp(path, mnt->mnt_fsname) == 0)
-	    return 1;
+        if (strcmp(path, mnt->mnt_fsname) == 0)
+            return 1;
     endmntent(f);
     return 0;
 #endif
@@ -287,8 +332,8 @@ int is_device_mounted(const char *path)
 
     count = getmntinfo(&stat, 0);
     for (i = 0; i < count; i++)
-	if (!strcmp(path, stat[i].f_mntfromname))
-	    return 1;
+        if (!strcmp(path, stat[i].f_mntfromname))
+            return 1;
     return 0;
 #endif
 

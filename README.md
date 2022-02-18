@@ -19,8 +19,9 @@
 ## Objectives
 1. &#9745; decide on tooling
 2. &#9745; decide on build mechanism
-3. &#9744; write drive image file maker (in progress)
+3. &#9745; write drive image file maker
 4. &#9745; decide on main file system
-4. &#9744; write boot sector and master boot sector for main file system (written but not tested)
+4. &#9744; write boot sector and master boot sector for main file system
+5. &#9744; incorporate boot sector and image build into a bootable imga by QEmu
 
 

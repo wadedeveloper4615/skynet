@@ -103,15 +103,11 @@ void mark_FAT_cluster(int cluster, unsigned int value)
         if (((cluster * 3) & 0x1) == 0)
         {
             fat[3 * cluster / 2] = (unsigned char)(value & 0x00ff);
-            fat[(3 * cluster / 2) + 1] =
-                (unsigned char)((fat[(3 * cluster / 2) + 1] & 0x00f0)
-                                | ((value & 0x0f00) >> 8));
+            fat[(3 * cluster / 2) + 1] = (unsigned char)((fat[(3 * cluster / 2) + 1] & 0x00f0) | ((value & 0x0f00) >> 8));
         }
         else
         {
-            fat[3 * cluster / 2] =
-                (unsigned char)((fat[3 * cluster / 2] & 0x000f) |
-                                ((value & 0x000f) << 4));
+            fat[3 * cluster / 2] = (unsigned char)((fat[3 * cluster / 2] & 0x000f) | ((value & 0x000f) << 4));
             fat[(3 * cluster / 2) + 1] = (unsigned char)((value & 0x0ff0) >> 4);
         }
         break;
@@ -139,12 +135,9 @@ void mark_FAT_cluster(int cluster, unsigned int value)
 
 void mark_FAT_sector(int sector, unsigned int value)
 {
-    int cluster = (sector - start_data_sector) / (int)(bs.cluster_size) /
-                  (sector_size / HARD_SECTOR_SIZE) + 2;
-
+    int cluster = (sector - start_data_sector) / (int)(bs.cluster_size) / (sector_size / HARD_SECTOR_SIZE) + 2;
     if (sector < start_data_sector || sector >= num_sectors)
         die("Internal error: out of range sector number in mark_FAT_sector");
-
     mark_FAT_cluster(cluster, value);
 }
 
