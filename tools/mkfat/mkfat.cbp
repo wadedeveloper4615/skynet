@@ -53,7 +53,19 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="charconv.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="common.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="device_info.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="endian.h" />
+		<Unit filename="file.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="mkfs.fat.c">
 			<Option compilerVar="CC" />
 		</Unit>

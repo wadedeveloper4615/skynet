@@ -79,12 +79,12 @@
 #define MSDOS_DPS_BITS 4	/* log2(MSDOS_DPS) */
 #define MSDOS_DIR_BITS 5	/* log2(sizeof(struct msdos_dir_entry)) */
 
-#define ATTR_NONE 0	/* no attribute bits */
-#define ATTR_RO 1	/* read-only */
+#define ATTR_NONE 0	    /* no attribute bits */
+#define ATTR_RO 1	    /* read-only */
 #define ATTR_HIDDEN 2	/* hidden */
-#define ATTR_SYS 4	/* system */
+#define ATTR_SYS 4	    /* system */
 #define ATTR_VOLUME 8	/* volume label */
-#define ATTR_DIR 16	/* directory */
+#define ATTR_DIR 16	    /* directory */
 #define ATTR_ARCH 32	/* archived */
 
 /* attribute bits that are copied "as is" */
@@ -205,28 +205,49 @@ struct device_info {
 
 struct msdos_dir_entry {
     uint8_t name[MSDOS_NAME];	/* name including extension */
-    uint8_t attr;		/* attribute bits */
-    uint8_t lcase;		/* Case for base and extension */
-    uint8_t ctime_cs;		/* Creation time, centiseconds (0-199) */
-    uint16_t ctime;		/* Creation time */
-    uint16_t cdate;		/* Creation date */
-    uint16_t adate;		/* Last access date */
-    uint16_t starthi;		/* High 16 bits of cluster in FAT32 */
+    uint8_t attr;		        /* attribute bits */
+    uint8_t lcase;		        /* Case for base and extension */
+    uint8_t ctime_cs;		    /* Creation time, centiseconds (0-199) */
+    uint16_t ctime;		        /* Creation time */
+    uint16_t cdate;		        /* Creation date */
+    uint16_t adate;		        /* Last access date */
+    uint16_t starthi;		    /* High 16 bits of cluster in FAT32 */
     uint16_t time, date, start;	/* time, date and first cluster */
-    uint32_t size;		/* file size (in bytes) */
+    uint32_t size;		        /* file size (in bytes) */
 };
 #pragma pack(pop)
 
-void die(const char *msg, ...);
-void setup_tables(void);
-int get_device_info(int fd, struct device_info *info);
-uint32_t generate_volume_id(void);
-void check_atari(void);
-void establish_params(struct device_info *info);
-void usage(const char *name, int exitval);
-unsigned int align_object(unsigned int sectors, unsigned int clustsize);
+//================ mkfs.fat.c===========
+int cdiv(int a, int b);
 void mark_FAT_cluster(int cluster, unsigned int value);
+void mark_FAT_sector(int sector, unsigned int value);
+long do_check(char *buffer, int try, off_t current_block);
+void alarm_intr(int alnum);
+void check_blocks(void);
+void get_list_blocks(char *filename);
+void check_mount(char *device_name);
+void establish_params(struct device_info *info);
+unsigned int align_object(unsigned int sectors, unsigned int clustsize);
+void setup_tables(void);
+void write_tables(void);
+void usage(const char *name, int exitval);
+//================ file.c===========
+void error(const char *msg, ...);
+void seekto(off_t pos,char *errstr);
+void writebuf(void *buf,int size,char *errstr);
+//================ common.c===========
+void die(const char *msg, ...);
+void pdie(const char *msg, ...);
+void *alloc(int size);
+void *qalloc(void **root, int size);
+void qfree(void **root);
+int minimum(int a, int b);
+int vasprintf(char **strp, const char *fmt, va_list va);
+int xasprintf(char **strp, const char *fmt, ...);
+int get_choice(int noninteractive_result, const char *noninteractive_msg, int choices, ...);
+char *get_line(const char *prompt, char *dest, size_t length);
+void check_atari(void);
+uint32_t generate_volume_id(void);
 int validate_volume_label(char *doslabel);
-int cp850_string_to_wchar_string(wchar_t *out, const char *in, unsigned int out_size);
-int dos_string_to_wchar_string(wchar_t *out, char *in, unsigned int out_size);
+
 #endif // MKFS_H_INCLUDED
