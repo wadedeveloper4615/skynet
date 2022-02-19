@@ -1,0 +1,7 @@
+#ifndef VERSION_H_INCLUDED
+#define VERSION_H_INCLUDED
+
+#define VERSION "1.0"
+#define VERSION_DATE "2022-02-19"
+
+#endif // VERSION_H_INCLUDED

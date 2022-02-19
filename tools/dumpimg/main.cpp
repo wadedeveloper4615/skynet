@@ -6,15 +6,9 @@ void parseFileSystem(char *filename){
     fs.parse();
 }
 
-int main()
+int main(int argc, char **argv)
 {
-    //parseFileSystem("C:\\projects\\skynet\\tools\\dumpimg\\images\\floppy.img");
-    //parseFileSystem("C:\\projects\\skynet\\tools\\dumpimg\\images\\a.img");
-    parseFileSystem("C:\\projects\\imgtest\\fat12_2.img");
-    //parseFileSystem("C:\\projects\\skynet\\tools\\dumpimg\\images\\fat16NoMbr.img");
-    //parseFileSystem("C:\\projects\\skynet\\tools\\dumpimg\\images\\fat16Mbr.img");
-    //parseFileSystem("C:\\projects\\skynet\\tools\\dumpimg\\images\\fat32NoMbr.img");
-    //parseFileSystem("C:\\projects\\skynet\\tools\\dumpimg\\images\\fat32Mbr.img");
+    parseFileSystem(argv[1]);
     printf("Execution Complete\n");
     return 0;
 }
