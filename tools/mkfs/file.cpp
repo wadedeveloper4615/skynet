@@ -5,24 +5,33 @@ File::File()
 {
 }
 
-void File::open(char *filename,FileState state){
+void File::open(char *filename,FileState state, CreationFlag flag)
+{
     handle = -1;
+    int oflag=0;
+    int pmode=0;
     if (state==READ)
     {
-        handle = _open(filename,_O_RDONLY|_O_BINARY,_S_IREAD);
+        oflag = _O_RDONLY|_O_BINARY;
+        pmode = _S_IREAD;
     }
     if (state==WRITE)
     {
-        handle = _open(filename,_O_WRONLY|_O_BINARY,_S_IWRITE);
+        oflag = _O_WRONLY|_O_BINARY;
+        pmode = _S_IWRITE;
     }
     if (state==READWRITE)
     {
-        handle = _open(filename,_O_RDWR|_O_BINARY,_S_IREAD | _S_IWRITE);
+        oflag = _O_RDWR|_O_BINARY;
+        pmode = _S_IREAD|_S_IWRITE;
     }
+    if (flag==CREATE){
+        oflag |= _O_CREAT;
+    }
+    handle = _open(filename,oflag,pmode);
     if (handle == -1)
     {
-        perror( "Open failed on input file" );
-        exit(1);
+        die( "Open failed on input file '%s'",filename);
     }
 }
 
@@ -73,6 +82,10 @@ DWORD File::write(void *buffer,DWORD Size)
     return dwBytesWritten;
 }
 
+int File::truncate(off64_t offset){
+    return ftruncate64(handle, offset);
+}
+
 __int64 File::seek(__int64 offset,DWORD origin)
 {
     return _lseeki64(handle,offset,origin);
@@ -81,11 +94,5 @@ __int64 File::seek(__int64 offset,DWORD origin)
 __int64 File::tell()
 {
     return _telli64(handle);
-}
-
-DWORD File::read(void *buffer, __int64 offset, DWORD size)
-{
-    seek(offset,SEEK_SET);
-    return read(buffer,size);
 }
 
