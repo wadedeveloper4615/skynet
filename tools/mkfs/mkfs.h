@@ -25,6 +25,8 @@
 #include <ctype.h>
 #include <getopt.h>
 #include <iconv.h>
+
+#include "endian.h"
 #include "version.h"
 
 #define DEFAULT_DOS_CODEPAGE 850
@@ -41,7 +43,8 @@
 #define mark_sector_bad( sector ) mark_FAT_sector( sector, FAT_BAD )
 
 /* FAT values */
-#define FAT_EOF      (atari_format ? 0x0fffffff : 0x0ffffff8)
+//#define FAT_EOF      (atari_format ? 0x0fffffff : 0x0ffffff8)
+#define FAT_EOF      (0x0ffffff8)
 #define FAT_BAD      0x0ffffff7
 #define MSDOS_EXT_SIGN 0x29	/* extended boot sector signature */
 #define MSDOS_FAT12_SIGN "FAT12   "	/* FAT12 filesystem signature */
@@ -95,38 +98,15 @@
 #define MSDOS_DOT ".          "		/* ".", padded to MSDOS_NAME chars */
 #define MSDOS_DOTDOT "..         "	/* "..", padded to MSDOS_NAME chars */
 
-typedef struct _ProgramArguments
-{
-    bool create;
-    off_t part_sector;                   /* partition offset in sector */
-    int size_fat;	                     /* Size in bits of FAT entries */
-    int size_fat_by_user;	             /* 1 if FAT size user selected */
-    unsigned sector_size;	             /* Size of a logical sector */
-    int sector_size_set;	             /* User selected sector size */
-    int sectors_per_cluster;	         /* Number of sectors per disk cluster */
-    char * device_name;
-    int blocks_specified;
-    unsigned long long blocks;           /* Number of blocks in filesystem */
-    unsigned hidden_sectors;	         /* Number of hidden sectors */
-    int hidden_sectors_by_user;	         /* -h option invoked */
-    int root_dir_entries;	             /* Number of root directory entries */
-    int root_dir_entries_set;	         /* User selected root directory size */
-    int fat_media_byte;	                 /* media byte in header and starting FAT */
-    int drive_number_by_user;	         /* drive number option invoked */
-    int drive_number_option;	         /* drive number */
-    long volume_id;                      /* Volume ID number */
-    int reserved_sectors;	             /* Number of reserved sectors */
-} ProgramArguments, *ProgramArgumentsPtr;
-
 #pragma pack(push, 1)
 struct msdos_volume_info
 {
-    uint8_t drive_number;	    /* BIOS drive number */
-    uint8_t boot_flags;		    /* bit 0: dirty, bit 1: need surface test */
-    uint8_t ext_boot_sign;	    /* 0x29 if fields below exist (DOS 3.3+) */
-    uint8_t volume_id[4];	    /* Volume ID number */
+    uint8_t drive_number;	/* BIOS drive number */
+    uint8_t boot_flags;		/* bit 0: dirty, bit 1: need surface test */
+    uint8_t ext_boot_sign;	/* 0x29 if fields below exist (DOS 3.3+) */
+    uint8_t volume_id[4];	/* Volume ID number */
     uint8_t volume_label[11];	/* Volume label */
-    uint8_t fs_type[8];		    /* Typically FAT12 or FAT16 */
+    uint8_t fs_type[8];		/* Typically FAT12 or FAT16 */
 };
 
 struct msdos_boot_sector
@@ -174,7 +154,8 @@ struct fat32_fsinfo
     uint32_t reserved1;		/* Nothing as far as I can tell */
     uint32_t signature;		/* 0x61417272L */
     uint32_t free_clusters;	/* Free cluster count.  -1 if unknown */
-    uint32_t next_cluster;	/* Most recently allocated cluster. Unused under Linux. */
+    uint32_t next_cluster;	/* Most recently allocated cluster.
+				 * Unused under Linux. */
     uint32_t reserved2[4];
 };
 
@@ -238,5 +219,37 @@ struct msdos_dir_entry {
 };
 #pragma pack(pop)
 
+//================ mkfs.fat.c===========
+int cdiv(int a, int b);
+void mark_FAT_cluster(int cluster, unsigned int value);
+void mark_FAT_sector(int sector, unsigned int value);
+long do_check(char *buffer, int try, off_t current_block);
+void alarm_intr(int alnum);
+void check_blocks(void);
+void get_list_blocks(char *filename);
+void check_mount(char *device_name);
+void establish_params(struct device_info *info);
+unsigned int align_object(unsigned int sectors, unsigned int clustsize);
+void setup_tables(void);
+void write_tables(void);
+void usage(const char *name, int exitval);
+//================ file.c===========
+void error(const char *msg, ...);
+void seekto(off_t pos,char *errstr);
+void writebuf(void *buf,int size,char *errstr);
+//================ common.c===========
 void die(const char *msg, ...);
+void pdie(const char *msg, ...);
+void *alloc(int size);
+void *qalloc(void **root, int size);
+void qfree(void **root);
+int minimum(int a, int b);
+int vasprintf(char **strp, const char *fmt, va_list va);
+int xasprintf(char **strp, const char *fmt, ...);
+int get_choice(int noninteractive_result, const char *noninteractive_msg, int choices, ...);
+char *get_line(const char *prompt, char *dest, size_t length);
+void check_atari(void);
+uint32_t generate_volume_id(void);
+int validate_volume_label(char *doslabel);
+
 #endif // MKFS_H_INCLUDED
