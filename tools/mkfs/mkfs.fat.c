@@ -4,8 +4,7 @@ unsigned char dummy_boot_jump[3] = { 0xeb, 0x3c, 0x90 };
 unsigned char dummy_boot_jump_m68k[2] = { 0x60, 0x1c };
 char dummy_boot_code[BOOTCODE_SIZE] = "\x0e"	        /* push cs */
                                       "\x1f"			/* pop ds */
-                                      "\xbe\x5b\x7c"	/* mov si, offset message_txt */
-                                      /* write_msg: */
+                                      "\xbe\x5b\x7c"	/* mov si, offset message_txt write_msg: */
                                       "\xac"			/* lodsb */
                                       "\x22\xc0"		/* and al, al */
                                       "\x74\x0b"		/* jz key_press */
@@ -14,8 +13,7 @@ char dummy_boot_code[BOOTCODE_SIZE] = "\x0e"	        /* push cs */
                                       "\xbb\x07\x00"	/* mov bx, 0007h */
                                       "\xcd\x10"		/* int 10h */
                                       "\x5e"			/* pop si */
-                                      "\xeb\xf0"		/* jmp write_msg */
-                                      /* key_press: */
+                                      "\xeb\xf0"		/* jmp write_msg key_press: */
                                       "\x32\xe4"		/* xor ah, ah */
                                       "\xcd\x16"		/* int 16h */
                                       "\xcd\x19"		/* int 19h */
